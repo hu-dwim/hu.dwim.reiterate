@@ -18,7 +18,7 @@
                :hu.dwim.util)
   :components ((:module "source"
                 :components ((:file "conditions" :depends-on ("package" "variables"))
-                             (:file "clause-handling" :depends-on ("conditions" "package" "variables"))
+                             (:file "clause-handling" :depends-on ("conditions" "package" "variables" "walker"))
                              (:file "expansion" :depends-on ("clause-handling" "conditions" "walker" "variables"))
                              (:file "package")
                              (:file "standard-clauses" :depends-on ("clause-handling" "conditions" "package" "variables"))

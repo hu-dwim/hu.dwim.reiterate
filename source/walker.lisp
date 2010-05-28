@@ -12,13 +12,12 @@
 (def layer reiterate ()
   ())
 
-(def function walk-form/reiterate (form &optional lexenv)
+(def function walk-iterate-form (whole &optional lexenv)
   (with-active-layers (reiterate)
-    (walk-form form :environment (make-walk-environment lexenv))))
-
-(def function walk-form/reiterate/toplevel (form &optional lexenv)
-  (assert (member (first form) '(iter iterate)))
-  (walk-form/reiterate (cons 'iterate (rest form)) lexenv))
+    (walk-form (if (eq 'iterate (first whole))
+                   whole
+                   (cons 'iterate (rest whole)))
+               :environment (make-walk-environment lexenv))))
 
 (def (definer :available-flags "e") walker/reiterate (name &body body)
   (with-standard-definer-options name
@@ -40,11 +39,11 @@
    (wrapping-bindings '() :initarg nil)
    (top-label (generate-unique-name 'loop-top) :initarg nil)
    (end-label (generate-unique-name 'loop-end) :initarg nil)
-   (result-form '(values) :initarg nil)
+   (result-form :initarg nil)
+   (result-form-candidates '() :initarg nil)
    (exit-conditions/before-loop-body '() :initarg nil)
    (exit-conditions/after-loop-body '() :initarg nil)
    (forms/prologue '() :initarg nil)
-   (forms/loop-body '() :initarg nil)
    (forms/epilogue '() :initarg nil)))
 
 (def walker/reiterate iterate

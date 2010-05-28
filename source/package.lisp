@@ -18,6 +18,8 @@
         :hu.dwim.util
         :metabang-bind)
   (:export #:for
+           #:repeat
+           #:collect
            #:in-list)
   (:shadowing-import-from :closer-mop
                           #:defgeneric

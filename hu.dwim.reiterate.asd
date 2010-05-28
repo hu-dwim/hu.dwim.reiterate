@@ -17,5 +17,10 @@
                :hu.dwim.syntax-sugar+hu.dwim.walker
                :hu.dwim.util)
   :components ((:module "source"
-                :components ((:file "package")
-                             (:file "walker" :depends-on ("package"))))))
+                :components ((:file "conditions" :depends-on ("package" "variables"))
+                             (:file "clause-handling" :depends-on ("conditions" "package" "variables"))
+                             (:file "expansion" :depends-on ("clause-handling" "conditions" "walker" "variables"))
+                             (:file "package")
+                             (:file "standard-clauses" :depends-on ("clause-handling" "conditions" "package" "variables"))
+                             (:file "variables" :depends-on ("package"))
+                             (:file "walker" :depends-on ("conditions" "package" "variables"))))))

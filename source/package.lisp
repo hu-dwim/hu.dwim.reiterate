@@ -17,6 +17,8 @@
         :hu.dwim.walker
         :hu.dwim.util
         :metabang-bind)
+  (:export #:for
+           #:in-list)
   (:shadowing-import-from :closer-mop
                           #:defgeneric
                           #:defmethod

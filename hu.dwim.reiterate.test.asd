@@ -14,5 +14,6 @@
                :hu.dwim.stefil+hu.dwim.def+swank)
   :components ((:module "test"
                 :components ((:file "package")
-                             (:file "suite" :depends-on ("package"))
-                             (:file "basic" :depends-on ("suite"))))))
+                             (:file "basic" :depends-on ("suite"))
+                             (:file "nesting" :depends-on ("suite"))
+                             (:file "suite" :depends-on ("package"))))))

@@ -49,10 +49,10 @@
                                   (setq ,variable/last-cons (cons ,value-tmp nil))
                                   (setq ,variable/head ,variable/last-cons)))))))))))
 
+(def clause initially
+  (clause-of-kind? 'initially)
+  (-register- :prologue (maybe-wrap-with-progn (rest -clause-))))
+
 (def clause finally
   (clause-of-kind? 'finally)
-  (progn
-    (if (slot-boundp *loop-form* 'result-form)
-        (iterate-compile-error "Duplicate finally clauses? The result form is already ~S while processing clause ~S" (result-form-of *loop-form*) -clause-)
-        (setf (result-form-of *loop-form*) (maybe-wrap-with-progn (rest -clause-))))
-    (-walk-form- nil)))
+  (-register- :epilogue (maybe-wrap-with-progn (rest -clause-))))

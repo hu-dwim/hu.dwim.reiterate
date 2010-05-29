@@ -70,6 +70,15 @@
     (setf name (generate-unique-name name))
     (%register/variable name initial-value)))
 
+(def function %register/result-form (whole args)
+  (unless (length= 1 args)
+    (iterate-compile-error "~S: result form should be one form in clause handler ~S" '-register- whole))
+  (bind ((result-form (first args)))
+    (log.debug "Registering result-form ~S, stack is ~A" result-form *loop-form-stack*)
+    (when (slot-boundp *loop-form* 'result-form)
+      (iterate-compile-error "The result form of ~A is already ~S while processing clause ~S" *loop-form* (result-form-of *loop-form*) whole))
+    (setf (result-form-of *loop-form*) result-form)))
+
 (def function %register/result-form-candidate (whole args)
   (bind ((name (first args))
          (value (second args)))
@@ -92,12 +101,24 @@
                      (named-lambda clause-expander (-clause-)
                        (flet ((-register- (kind &rest args)
                                 (ecase kind
+                                  (:prologue
+                                   (appendf (forms/prologue-of *loop-form*) args)
+                                   (values))
+                                  (:epilogue
+                                   (appendf (forms/epilogue-of *loop-form*) args)
+                                   (values))
                                   (:exit-condition/before-loop-body
-                                   (appendf (exit-conditions/before-loop-body-of *loop-form*) args))
+                                   (appendf (exit-conditions/before-loop-body-of *loop-form*) args)
+                                   (values))
                                   (:exit-condition/after-loop-body
-                                   (appendf (exit-conditions/after-loop-body-of *loop-form*) args))
+                                   (appendf (exit-conditions/after-loop-body-of *loop-form*) args)
+                                   (values))
+                                  (:result-form
+                                   (%register/result-form ,whole args)
+                                   (values))
                                   (:result-form-candidate ; (... name value)
-                                   (%register/result-form-candidate ,whole args))
+                                   (%register/result-form-candidate ,whole args)
+                                   (values))
                                   (:variable ; (... name initial-value)
                                    (%register/named-variable ,whole args))
                                   (:temporary-variable ; (... initial-value name-hint)
@@ -147,8 +168,11 @@
         (when (funcall matcher form)
           (log.debug "Form ~S matched as a clause in stack ~A" form *loop-form-stack*)
           (with-possibly-different-iteration-context ((loop-stack-position form) :clause form)
-            (bind ((result (funcall expander form)))
+            (bind ((result (multiple-value-list (funcall expander form))))
               (log.debug "Expanded ~S into ~S" form result)
+              (setf result (if (length= 0 result)
+                               (make-instance 'free-application-form :operator 'values :arguments '())
+                               (first result)))
               (check-type result walked-form)
               (return-from walk-form/compound result)))))))
   (call-next-layered-method))

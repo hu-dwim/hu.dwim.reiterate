@@ -20,6 +20,7 @@
   (:export #:for
            #:repeat
            #:collect
+           #:initially
            #:finally
            #:in-list)
   (:shadowing-import-from :closer-mop

@@ -17,7 +17,7 @@
 
 (def test test/basic/clauses-expand ()
   (finishes (macroexpand '(iter (repeat 2)
-                                (print foo))))
+                                (print 42))))
   (finishes (macroexpand '(iter (repeat 2)
                                 (for i :in-list '(1 2 3))
                                 (collect i))))

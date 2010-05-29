@@ -85,8 +85,8 @@
                      (map nil #'recurse node))))
           (recurse body))))))
 
-(def walker/reiterate iterate
-  (walk-loop-form -form- -parent- -environment-))
-
-(def walker/reiterate iter
-  (walk-loop-form -form- -parent- -environment-))
+#.`(progn
+     ,@(loop
+         :for alias :in +toplevel-macro-aliases+
+         :collect `(def walker/reiterate ,alias
+                       (walk-loop-form -form- -parent- -environment-))))

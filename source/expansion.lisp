@@ -8,13 +8,12 @@
 
 ;; FIXME expand is called twice?!
 
-(def (macro e) iter (&whole whole &environment lexenv &body body)
-  (declare (ignore body))
-  (call-expand-from-macro whole lexenv))
-
-(def (macro e) iterate (&whole whole &environment lexenv &body body)
-  (declare (ignore body))
-  (call-expand-from-macro whole lexenv))
+#.`(progn
+     ,@(loop
+         :for alias :in +toplevel-macro-aliases+
+         :collect `(def (macro e) ,alias (&whole whole &environment lexenv &body body)
+                     (declare (ignore body))
+                     (call-expand-from-macro whole lexenv))))
 
 (def layered-method unwalk-form :in reiterate ((loop-form loop-form))
   (call-expand-from-unwalker loop-form))

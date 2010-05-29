@@ -6,6 +6,8 @@
 
 (in-package :hu.dwim.reiterate)
 
+(def constant +toplevel-macro-aliases+ '(iter iterate))
+
 (def special-variable *loop-form-stack* '())
 
 (def special-variable *loop-form*)

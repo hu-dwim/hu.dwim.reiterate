@@ -23,6 +23,11 @@
       (expand))))
 
 (def function call-expand-from-macro (whole lexenv)
+  ;; We must to make sure FORM does not have reused CONS cells because we use the CONS identities to
+  ;; identify which iter macro they are coming from in case of nesting.
+  ;; It can happen in compiled code (e.g. on SBCL this is and endless loop when used inside a defun
+  ;; because the two REPEATs have the same identity: (iter (repeat 2) (iter (repeat 2)))
+  (setf whole (copy-tree whole))
   (with-active-layers (reiterate)
     (bind ((*loop-form* (walk-form whole :environment (make-walk-environment lexenv)))
            (*loop-form-stack* (cons *loop-form* *loop-form-stack*)))

@@ -17,6 +17,21 @@
       (-register- :exit-condition/after-loop-body `(atom (setq ,variable/current-cons (cdr ,variable/current-cons))))
       (-walk-form- `(setq ,variable/car (car ,variable/current-cons))))))
 
+(def clause for/in-vector
+  (named-clause-of-kind? for in-vector)
+  (progn
+    (unless (<= 4 (length -clause-) 4)
+      (iterate-compile-error "Unable to parse clause ~S" -clause-))
+    (bind ((the-vector (fourth -clause-))
+           (variable/element (-register- :variable (second -clause-)))
+           (variable/vector  (-register- :variable "IN-VECTOR/VECTOR" (-unwalk-form- (-walk-form- the-vector))))
+           (variable/length  (-register- :variable "IN-VECTOR/LENGTH" `(length ,variable/vector)))
+           (variable/index   (-register- :variable "IN-VECTOR/INDEX" 0)))
+      (-register- :exit-condition/before-loop-body `(>= ,variable/index ,variable/length))
+      (-walk-form- `(progn
+                      (setq ,variable/element (aref ,variable/vector ,variable/index))
+                      (incf ,variable/index))))))
+
 (def clause repeat
   (clause-of-kind? repeat)
   (progn

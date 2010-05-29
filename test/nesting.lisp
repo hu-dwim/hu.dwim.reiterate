@@ -21,7 +21,9 @@
                                            ,@body)))
                          (wrapper
                           ;; this collect should collect into OUTER
-                          (collect i))))))))
+                          (collect i)))))))))
+
+(def test test/nesting/2 ()
   (is (equal '(a a b b c c)
              (eval '(macrolet ((wrapper (&body body)
                                 `(iter named inner
@@ -32,3 +34,12 @@
                            (wrapper
                             ;; this collect should collect into OUTER
                             (collect i))))))))
+
+(def test test/nesting/3 ()
+  (is (equal '(a a a b b b c c c)
+             (eval '(iter outer
+                          (for i :in-list '(a b c))
+                          (progn
+                            (iter inner
+                                  (repeat 3)
+                                  (collect i :in outer))))))))

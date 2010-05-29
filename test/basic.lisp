@@ -33,8 +33,7 @@
   (is (equal '(1 2 3)
              (eval '(iter (for i :in-list '(1 2 3))
                           (collect i)))))
-  (with-expected-failures
-    (is (equal '(1 1 2 2 3 3)
-               (eval '(iter (for i :in-list '(1 2 3))
-                            (collect i)
-                            (collect i)))))))
+  (is (equal '(1 1 2 2 3 3)
+             (eval '(iter (for i :in-list '(1 2 3))
+                          (collect i)
+                          (collect i))))))

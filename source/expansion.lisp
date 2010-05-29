@@ -15,7 +15,7 @@
   (expand whole lexenv))
 
 (def function expand (whole &optional lexenv)
-  (assert (member (first whole) '(iter iterate)))
+  (assert (reiterate-toplevel-macro-name? (first whole)))
   (with-active-layers (reiterate)
     (bind ((*loop-form* (walk-form (if (eq 'iterate (first whole))
                                        whole
@@ -27,6 +27,7 @@
                     forms/prologue forms/epilogue walk-environment/loop-body) *loop-form*)
            (expansion nil)
            (result-form nil))
+      (log.debug "Toplevel iterate form ~S, ~A" whole *loop-form*)
       (setf body (mapcar [walk-form !1 :parent *loop-form* :environment walk-environment/loop-body] body))
       (cond
         ((slot-boundp *loop-form* 'result-form)
@@ -45,7 +46,7 @@
                   ,@forms/prologue
                   ,top-label
                   ,@(generate-exit-jumps exit-conditions/before-loop-body)
-                  ,@(mappend 'unwalk-form body)
+                  ,@(mapcar 'unwalk-form body)
                   ,@(generate-exit-jumps exit-conditions/after-loop-body)
                   (go ,top-label)
                   ,end-label

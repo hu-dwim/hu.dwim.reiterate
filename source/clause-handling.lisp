@@ -18,6 +18,7 @@
   (bind (((:slots walk-environment/loop-body) *loop-form*))
     (appendf (wrapping-bindings-of *loop-form*) `((,name ,initial-value)))
     (walk-environment/augment! walk-environment/loop-body :variable name)
+    (log.debug "Augmented environment with variable ~S in the context of ~A: ~A" name *loop-form* walk-environment/loop-body)
     name))
 
 (def function %register/named-variable (whole args)
@@ -97,11 +98,30 @@
            (equal/clause-name sub-kind (third clause)))))
 
 (def layered-method walk-form/compound :in reiterate :around (name form parent environment)
-  (dolist (clause-handler (collect-namespace-values 'clause-handler))
-    (bind (((matcher expander) clause-handler))
-      (when (funcall matcher form)
-        (bind ((result (multiple-value-list (funcall expander form))))
-          (return-from walk-form/compound
-            (walk-form result :parent parent :environment environment))))))
+  (flet ((belongs-to-a-parent-iterate-form? (form)
+           (if (boundp '*loop-form-stack*)
+               (progn
+                 (log.debug "BELONGS-TO-A-PARENT-ITERATE-FORM? will test with stack ~A" (rest *loop-form-stack*))
+                 (some (lambda (loop-form)
+                         (bind ((result (gethash form (body-conses-of loop-form))))
+                           (log.debug "BELONGS-TO-A-PARENT-ITERATE-FORM? ~S ~A" form result)
+                           result))
+                       (rest *loop-form-stack*)))
+               #f)))
+    (dolist (clause-handler (collect-namespace-values 'clause-handler))
+      (bind (((matcher expander) clause-handler))
+        (when (funcall matcher form)
+          (log.debug "Form ~S matched as a clause" form)
+          (if (belongs-to-a-parent-iterate-form? form)
+              ;; it's not part of our body, just wrap it into a quote for the walker
+              (with-form-object (result 'unwalked-form parent
+                                        ;; make sure regardless of macroexpansion or anything else, we capture the true source form in the source slot
+                                        :source form)
+                ;; we'll return with the fresh unwalked-form node
+                (log.debug "Quoted clause ~S in the context of ~A" form *loop-form*))
+              ;; it's part of our body, so call the clause expander and walk its return value
+              (bind ((result (funcall expander form)))
+                (log.debug "Expanded ~S into ~S in the context of ~A" form result *loop-form*)
+                (return-from walk-form/compound
+                  (walk-form result :parent parent :environment (walk-environment/loop-body-of *loop-form*)))))))))
   (call-next-layered-method))
-

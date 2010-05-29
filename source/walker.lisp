@@ -12,6 +12,9 @@
 (def layer reiterate ()
   ())
 
+(def function reiterate-toplevel-macro-name? (thing)
+  (member thing '(iter iterate) :test #'eq))
+
 (def function walk-iterate-form (whole &optional lexenv)
   (with-active-layers (reiterate)
     (walk-form (if (eq 'iterate (first whole))
@@ -34,6 +37,7 @@
   ((whole)
    (name nil :type loop-name)
    (body)
+   (body-conses (make-hash-table :test #'eq))
    (walk-environment/enclosing)
    (walk-environment/loop-body)
    (wrapping-bindings '() :initarg nil)
@@ -65,6 +69,15 @@
            (setf name (pop body))))
         (unless (typep name 'loop-name)
           (name-error))))
-    (make-instance 'loop-form :parent -parent- :whole whole :name name :body body
-                   :walk-environment/enclosing -environment-
-                   :walk-environment/loop-body (hu.dwim.walker::copy-walk-environment -environment-))))
+    (with-form-object (*loop-form* 'loop-form -parent- :whole whole :name name :body body
+                                   :walk-environment/enclosing -environment-
+                                   :walk-environment/loop-body (hu.dwim.walker::copy-walk-environment -environment-))
+      (bind ((body-conses (body-conses-of *loop-form*)))
+        ;; register which conses are part of our body, so that we can properly handle nested usage later
+        (labels ((recurse (node)
+                   (unless (or (atom node)
+                               (reiterate-toplevel-macro-name? (first node)))
+                     (log.debug "Registering as body of ~A ~S" *loop-form* node)
+                     (setf (gethash node body-conses) #t)
+                     (map nil #'recurse node))))
+          (recurse body))))))

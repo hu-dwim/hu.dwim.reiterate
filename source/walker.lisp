@@ -51,12 +51,14 @@
    (forms/prologue '() :initarg nil)
    (forms/epilogue '() :initarg nil)))
 
-(def walker/reiterate iterate
+(def print-object loop-form
+  (princ (name-of -self-)))
+
+(def function walk-loop-form (form parent walk-environment)
   (bind ((name nil)
-         (whole -form-)
-         (body (rest -form-)))
+         (body (rest form)))
     (flet ((name-error ()
-             (iterate-compile-error "~S is not a valid name for a loop in form ~S" name whole)))
+             (iterate-compile-error "~S is not a valid name for a loop in form ~S" name form)))
       (when (and body
                  (first body))
         (cond
@@ -70,9 +72,9 @@
            (setf name (pop body))))
         (unless (typep name 'loop-name)
           (name-error))))
-    (with-form-object (*loop-form* 'loop-form -parent- :whole whole :name name :body body
-                                   :walk-environment/enclosing -environment-
-                                   :walk-environment/loop-body (hu.dwim.walker::copy-walk-environment -environment-))
+    (with-form-object (*loop-form* 'loop-form parent :whole form :name name :body body
+                                   :walk-environment/enclosing walk-environment
+                                   :walk-environment/loop-body (hu.dwim.walker::copy-walk-environment walk-environment))
       (bind ((body-conses (body-conses-of *loop-form*)))
         ;; register which conses are part of our body, so that we can properly handle nested usage later
         (labels ((recurse (node)
@@ -82,3 +84,9 @@
                      (setf (gethash node body-conses) #t)
                      (map nil #'recurse node))))
           (recurse body))))))
+
+(def walker/reiterate iterate
+  (walk-loop-form -form- -parent- -environment-))
+
+(def walker/reiterate iter
+  (walk-loop-form -form- -parent- -environment-))

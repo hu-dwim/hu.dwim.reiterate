@@ -8,18 +8,41 @@
 
 (def namespace clause-handler)
 
+(def macro ensure-clause-data (key &body value)
+  (with-unique-names (entry)
+    (once-only (key)
+      `(bind ((,entry (assoc-value (clause-data-storage-of *loop-form*) ,key :test #'equal)))
+         (or ,entry
+             (progn
+               (log.debug "Registering new clause data with key ~S in loop ~A" ,key *loop-form*)
+               (setf (assoc-value (clause-data-storage-of *loop-form*) ,key :test #'equal)
+                     (progn ,@value))))))))
+
+(def with-macro* with-different-iteration-context (position)
+  (bind ((*loop-form* (elt *loop-form-stack* position))
+         (*loop-form-stack* (subseq *loop-form-stack* position)))
+    (log.debug "Hijacked clause stack is ~A" *loop-form-stack*)
+    (multiple-value-prog1
+        (-with-macro/body-)
+      (log.debug "Hijacking ends"))))
+
+(def with-macro* with-possibly-different-iteration-context (name-or-position &key clause)
+  (if name-or-position
+      (progn
+        (log.debug "Will try to process clause ~S in loop called ~S" clause name-or-position)
+        (bind ((position (etypecase name-or-position
+                           (number name-or-position)
+                           (symbol (or (position name-or-position *loop-form-stack* :key 'name-of :test 'equal)
+                                       (iterate-compile-error "Could not find loop called ~S~:[~:; used in clause ~S~]" name-or-position clause clause))))))
+          (with-different-iteration-context (position)
+            (-with-macro/body-))))
+      (-with-macro/body-)))
+
 (def function maybe-wrap-with-progn (forms)
   (if (length= 1 forms)
       (first forms)
       `(progn
          ,@forms)))
-
-(def macro ensure-clause-data (key &body value)
-  (with-unique-names (entry)
-    `(bind ((,entry (assoc-value (clause-data-storage-of *loop-form*) ,key :test #'equal)))
-       (or ,entry
-           (setf (assoc-value (clause-data-storage-of *loop-form*) ,key :test #'equal)
-                 (progn ,@value))))))
 
 (def function %register/variable (name initial-value)
   (bind (((:slots walk-environment/loop-body) *loop-form*))
@@ -52,6 +75,7 @@
          (value (second args)))
     (unless (length= 2 args)
       (iterate-compile-error "~S: don't know how to deal with ~S in clause handler ~S" '-register- (list* :result-form-candidate args) whole))
+    (log.debug "Registering result-form-candidate with key ~S, stack is ~A" name *loop-form-stack*)
     (setf (assoc-value (result-form-candidates-of *loop-form*) name :test 'equal) value)))
 
 (def definer clause (&whole whole-form name match-condition-form expander-form)
@@ -79,6 +103,7 @@
                                   (:temporary-variable ; (... initial-value name-hint)
                                    (%register/temporary-variable ,whole args))))
                               (-walk-form- (node &optional (parent *loop-form*) (environment (walk-environment/loop-body-of *loop-form*)))
+                                (log.debug "Will walk ~S in context ~A" node *loop-form*)
                                 (walk-form node :parent parent :environment environment))
                               (-unwalk-form- (node)
                                 (unwalk-form node)))
@@ -105,30 +130,25 @@
            (equal/clause-name sub-kind (third clause)))))
 
 (def layered-method walk-form/compound :in reiterate :around (name form parent environment)
-  (flet ((belongs-to-a-parent-iterate-form? (form)
+  (flet ((loop-stack-position (form)
+           ;; finds the first loop-form on the stack that owns this form
            (if (boundp '*loop-form-stack*)
                (progn
                  (log.debug "BELONGS-TO-A-PARENT-ITERATE-FORM? will test with stack ~A" (rest *loop-form-stack*))
-                 (some (lambda (loop-form)
-                         (bind ((result (gethash form (body-conses-of loop-form))))
-                           (log.debug "BELONGS-TO-A-PARENT-ITERATE-FORM? ~S ~A" form result)
-                           result))
-                       (rest *loop-form-stack*)))
-               #f)))
+                 (position-if (lambda (loop-form)
+                                (bind ((result (gethash form (body-conses-of loop-form))))
+                                  (log.debug "BELONGS-TO-A-PARENT-ITERATE-FORM? ~S ~A" form result)
+                                  result))
+                              *loop-form-stack*
+                              :from-end #t))
+               nil)))
     (dolist (clause-handler (collect-namespace-values 'clause-handler))
       (bind (((matcher expander) clause-handler))
         (when (funcall matcher form)
-          (log.debug "Form ~S matched as a clause" form)
-          (if (belongs-to-a-parent-iterate-form? form)
-              ;; it's not part of our body, just wrap it into a quote for the walker
-              (with-form-object (result 'unwalked-form parent
-                                        ;; make sure regardless of macroexpansion or anything else, we capture the true source form in the source slot
-                                        :source form)
-                ;; we'll return with the fresh unwalked-form node
-                (log.debug "Quoted clause ~S in the context of ~A" form *loop-form*))
-              ;; it's part of our body, so call the clause expander and walk its return value
-              (bind ((result (funcall expander form)))
-                (log.debug "Expanded ~S into ~S in the context of ~A" form result *loop-form*)
-                (return-from walk-form/compound
-                  (walk-form result :parent parent :environment (walk-environment/loop-body-of *loop-form*)))))))))
+          (log.debug "Form ~S matched as a clause in stack ~A" form *loop-form-stack*)
+          (with-possibly-different-iteration-context ((loop-stack-position form) :clause form)
+            (bind ((result (funcall expander form)))
+              (log.debug "Expanded ~S into ~S" form result)
+              (check-type result walked-form)
+              (return-from walk-form/compound result)))))))
   (call-next-layered-method))

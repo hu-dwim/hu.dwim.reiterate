@@ -22,6 +22,7 @@
            #:collect
            #:initially
            #:finally
+           #:first-time?
            #:in-list)
   (:shadowing-import-from :closer-mop
                           #:defgeneric

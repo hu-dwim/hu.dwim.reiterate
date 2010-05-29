@@ -56,3 +56,12 @@
 (def clause finally
   (clause-of-kind? 'finally)
   (-register- :epilogue (maybe-wrap-with-progn (rest -clause-))))
+
+(def clause first-time?
+  (clause-of-kind? 'first-time?)
+  (bind ((temporary (-register- :temporary-variable #t "FIRST-TIME/FLAG")))
+    (unless (equal -clause- '(first-time?))
+      (iterate-compile-error "Unable to parse clause ~S" -clause-))
+    (-walk-form- `(prog1
+                      ,temporary
+                    (setq ,temporary #f)))))

@@ -37,3 +37,23 @@
              (eval '(iter (for i :in-list '(1 2 3))
                           (collect i)
                           (collect i))))))
+
+(def test test/basic/initially ()
+  (is (equal '(42)
+             (eval '(let ((x 10))
+                      (iter (initially (setf x 42))
+                            (repeat 1)
+                            (collect x)))))))
+
+(def test test/basic/finally ()
+  (is (equal 42
+             (eval '(iter named alma
+                          (repeat 1)
+                          (finally (return-from alma 42)))))))
+
+(def test test/basic/first-time? ()
+  (is (equal '("x" "," "x" "," "x")
+             (eval '(iter (repeat 3)
+                          (unless (first-time?)
+                            (collect ","))
+                          (collect "x"))))))

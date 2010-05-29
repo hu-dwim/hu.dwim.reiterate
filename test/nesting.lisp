@@ -43,3 +43,16 @@
                             (iter inner
                                   (repeat 3)
                                   (collect i :in outer))))))))
+
+(def test test/nesting/4 ()
+  (is (equal '(A A 1 2 3 A 1 2 3 B B 1 2 3 B 1 2 3 C C 1 2 3 C 1 2 3)
+             (eval '(iter level1
+                          (for i :in-list '(a b c))
+                          (progn
+                            (collect i)
+                            (iter level2
+                                  (repeat 2)
+                                  (collect i :in level1)
+                                  (iter level3
+                                        (for i :in-list '(1 2 3))
+                                        (collect i :in level1)))))))))

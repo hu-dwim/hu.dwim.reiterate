@@ -20,9 +20,14 @@
   (:export #:for
            #:repeat
            #:collect
+           #:collecting
            #:initially
            #:finally
            #:first-time?
+           #:count
+           #:countint
+           #:sum
+           #:summing
            #:in-list)
   (:shadowing-import-from :closer-mop
                           #:defgeneric

@@ -6,8 +6,6 @@
 
 (in-package :hu.dwim.reiterate)
 
-;; FIXME expand is called twice?!
-
 (for-each-iterator-alias alias
   `(def (macro e) ,alias (&whole whole &environment lexenv &body body)
      (declare (ignore body))

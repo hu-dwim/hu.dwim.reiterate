@@ -18,6 +18,18 @@
                (setf (assoc-value (clause-data-storage-of *loop-form*) ,key :test #'equal)
                      (progn ,@value))))))))
 
+(def macro clause-expander/single-named-variable ((variable-name initial-value clause-data-key-name
+                                                                 &key (temporary-variable-name-prefix (string+ (string clause-data-key-name) "/VALUE"))
+                                                                 (result-form-candidate #f))
+                                                   &body body)
+  `(bind (((value &key in into) (rest -clause-)))
+     (with-possibly-different-iteration-context (in :clause -clause-)
+       (bind ((,variable-name (ensure-clause-data (list ,clause-data-key-name into)
+                                (or into (-register- :temporary-variable ,initial-value ,temporary-variable-name-prefix)))))
+         ,(when result-form-candidate
+            `(-register- :result-form-candidate (list ,clause-data-key-name into) ,variable-name))
+         (-walk-form- (maybe-wrap-with-progn (list ,@body)))))))
+
 (def with-macro* with-different-iteration-context (position)
   (bind ((*loop-form* (elt *loop-form-stack* position))
          (*loop-form-stack* (subseq *loop-form-stack* position)))
@@ -92,9 +104,11 @@
     `(bind ((,whole ',whole-form))
        (macrolet
            ((named-clause-of-kind? (kind &optional sub-kind)
-              `(funcall 'named-clause-of-kind? -clause- ,kind ,sub-kind))
-            (clause-of-kind? (kind)
-              `(funcall 'clause-of-kind? -clause- ,kind)))
+              `(funcall 'named-clause-of-kind? -clause- ',kind ',sub-kind))
+            (clause-of-kind? (&rest kinds)
+              `(or ,@(loop
+                       :for kind :in kinds
+                       :collect `(funcall 'clause-of-kind? -clause- ',kind)))))
          (setf (find-clause-handler ',name)
                (list (named-lambda clause-matcher (-clause-)
                        ,match-condition-form)
@@ -158,7 +172,7 @@
                  (log.debug "BELONGS-TO-A-PARENT-ITERATE-FORM? will test with stack ~A" (rest *loop-form-stack*))
                  (position-if (lambda (loop-form)
                                 (bind ((result (gethash form (body-conses-of loop-form))))
-                                  (log.debug "BELONGS-TO-A-PARENT-ITERATE-FORM? ~S ~A" form result)
+                                  (log.debug "BELONGS-TO-A-PARENT-ITERATE-FORM? ~S ~A loop-form ~A" form loop-form result)
                                   result))
                               *loop-form-stack*
                               :from-end #t))

@@ -7,7 +7,7 @@
 (in-package :hu.dwim.reiterate)
 
 (def clause for/in-list
-  (named-clause-of-kind? 'for 'in-list)
+  (named-clause-of-kind? for in-list)
   (progn
     (unless (<= 4 (length -clause-) 4)
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
@@ -18,29 +18,28 @@
       (-walk-form- `(setq ,variable/car (car ,variable/current-cons))))))
 
 (def clause repeat
-  (clause-of-kind? 'repeat)
+  (clause-of-kind? repeat)
   (progn
     (unless (length= 2 -clause-)
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
     (bind ((count (-walk-form- (second -clause-)))
            (variable (-register- :temporary-variable (-unwalk-form- count) "REPEAT/COUNTER")))
-      (-register- :exit-condition/before-loop-body `(zerop ,variable))
+      (-register- :exit-condition/before-loop-body `(<= ,variable 0))
       (-walk-form- `(decf ,variable)))))
 
 (def clause collect
-  (clause-of-kind? 'collect)
+  (clause-of-kind? collect collecting)
   (progn
     (unless (<= 2 (length -clause-))
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
-    (bind (((value &key in into) (rest -clause-))
-           (value (-walk-form- value)))
+    (bind (((value &key in into) (rest -clause-)))
       (with-possibly-different-iteration-context (in :clause -clause-)
         (bind (((variable/head variable/last-cons) (ensure-clause-data (list :collect into)
                                                      (list (or into (-register- :temporary-variable nil "COLLECT/HEAD"))
                                                            (-register- :temporary-variable nil "COLLECT/LAST-CONS")))))
           (-register- :result-form-candidate (list :collect into) variable/head)
           (with-unique-names (value-tmp cons-tmp)
-            (-walk-form- `(let ((,value-tmp ,(-unwalk-form- value)))
+            (-walk-form- `(let ((,value-tmp ,(-unwalk-form- (-walk-form- value))))
                             (if ,variable/head
                                 (let ((,cons-tmp (cons ,value-tmp nil)))
                                   (setf (cdr ,variable/last-cons) ,cons-tmp)
@@ -49,19 +48,35 @@
                                   (setq ,variable/last-cons (cons ,value-tmp nil))
                                   (setq ,variable/head ,variable/last-cons)))))))))))
 
+(def clause sum
+  (clause-of-kind? sum summing)
+  (clause-expander/single-named-variable (variable/sum 0 :sum :result-form-candidate #t)
+    `(incf ,variable/sum ,(-unwalk-form- (-walk-form- value)))))
+
+(def clause count
+  (clause-of-kind? count counting)
+  (clause-expander/single-named-variable (variable/sum 0 :sum :result-form-candidate #t)
+    (with-unique-names (tmp)
+      `(let ((,tmp ,(-unwalk-form- (-walk-form- value))))
+         (cond
+           ((numberp ,tmp)
+            (incf ,variable/sum ,tmp))
+           (,tmp
+            (incf ,variable/sum 1)))))))
+
 (def clause initially
-  (clause-of-kind? 'initially)
+  (clause-of-kind? initially)
   (-register- :prologue (maybe-wrap-with-progn (rest -clause-))))
 
 (def clause finally
-  (clause-of-kind? 'finally)
+  (clause-of-kind? finally)
   (-register- :epilogue (maybe-wrap-with-progn (rest -clause-))))
 
 (def clause first-time?
-  (clause-of-kind? 'first-time?)
-  (bind ((temporary (-register- :temporary-variable #t "FIRST-TIME/FLAG")))
-    (unless (equal -clause- '(first-time?))
-      (iterate-compile-error "Unable to parse clause ~S" -clause-))
-    (-walk-form- `(prog1
-                      ,temporary
-                    (setq ,temporary #f)))))
+  (clause-of-kind? first-time?)
+  (bind (((&key in) (rest -clause-)))
+    (with-possibly-different-iteration-context (in :clause -clause-)
+      (bind ((temporary (-register- :temporary-variable #t "FIRST-TIME/FLAG")))
+        (-walk-form- `(prog1
+                          ,temporary
+                        (setq ,temporary #f)))))))

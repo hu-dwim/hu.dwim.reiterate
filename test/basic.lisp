@@ -38,6 +38,17 @@
                           (collect i)
                           (collect i))))))
 
+(def test test/basic/sum ()
+  (is (= 10 (eval '(iter (repeat 9.5) (sum 1)))))
+  (signals error (eval '(locally
+                            (declare #+sbcl(sb-ext:muffle-conditions warning))
+                          (iter (repeat 1) (sum 'not-a-number))))))
+
+(def test test/basic/count ()
+  (is (= 10 (eval '(iter (repeat 9.5) (count 1)))))
+  (is (= 9  (eval '(iter (repeat 9) (count t)))))
+  (is (= 0  (eval '(iter (repeat -1.5) (counting t))))))
+
 (def test test/basic/initially ()
   (is (equal '(42)
              (eval '(let ((x 10))
@@ -46,14 +57,21 @@
                             (collect x)))))))
 
 (def test test/basic/finally ()
-  (is (equal 42
-             (eval '(iter named alma
-                          (repeat 1)
-                          (finally (return-from alma 42)))))))
+  (is (= 42 (eval '(iter named alma
+                    (repeat 1)
+                    (finally (return-from alma 42)))))))
 
 (def test test/basic/first-time? ()
   (is (equal '("x" "," "x" "," "x")
              (eval '(iter (repeat 3)
                           (unless (first-time?)
                             (collect ","))
-                          (collect "x"))))))
+                          (collect "x")))))
+  (is (equal '((    "x" "," "x")
+               ("," "x" "," "x"))
+             (eval '(iter named outer
+                          (repeat 2)
+                          (collect (iter (repeat 2)
+                                         (unless (first-time? :in outer)
+                                           (collect ","))
+                                         (collect "x"))))))))

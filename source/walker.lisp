@@ -13,7 +13,7 @@
   ())
 
 (def function reiterate-toplevel-macro-name? (thing)
-  (member thing '(iter iterate) :test #'eq))
+  (member thing +toplevel-macro-aliases+ :test #'eq))
 
 (def function walk-iterate-form (whole &optional lexenv)
   (with-active-layers (reiterate)

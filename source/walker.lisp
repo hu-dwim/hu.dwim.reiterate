@@ -40,6 +40,7 @@
    (body-conses (make-hash-table :test #'eq))
    (walk-environment/enclosing)
    (walk-environment/loop-body)
+   (clause-data-storage '() :initarg nil)
    (wrapping-bindings '() :initarg nil)
    (top-label (generate-unique-name 'loop-top) :initarg nil)
    (end-label (generate-unique-name 'loop-end) :initarg nil)

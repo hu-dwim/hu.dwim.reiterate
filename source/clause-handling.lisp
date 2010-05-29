@@ -14,6 +14,13 @@
       `(progn
          ,@forms)))
 
+(def macro ensure-clause-data (key &body value)
+  (with-unique-names (entry)
+    `(bind ((,entry (assoc-value (clause-data-storage-of *loop-form*) ,key :test #'equal)))
+       (or ,entry
+           (setf (assoc-value (clause-data-storage-of *loop-form*) ,key :test #'equal)
+                 (progn ,@value))))))
+
 (def function %register/variable (name initial-value)
   (bind (((:slots walk-environment/loop-body) *loop-form*))
     (appendf (wrapping-bindings-of *loop-form*) `((,name ,initial-value)))

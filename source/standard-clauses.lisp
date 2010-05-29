@@ -28,30 +28,28 @@
       `(decf ,variable))))
 
 (def clause collect
-  ;; TODO broken: should register the generated variable/head and variable/last-cons vars somewhere that later clauses can find and reuse
   (clause-of-kind? 'collect)
   (progn
     (unless (<= 2 (length -clause-))
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
-    (bind ((value (-walk-form- (second -clause-)))
-           (keys (rest (rest -clause-)))
-           (name nil)
-           (variable/head nil)
-           (variable/last-cons (-register- :temporary-variable nil "COLLECT/LAST-CONS")))
-      ;; TODO process keys
-      (unless (zerop (length keys))
-        (iterate-compile-error "Unknown options for clause ~S" -clause-))
-      (setf variable/head (or name (-register- :temporary-variable nil "COLLECT/HEAD")))
-      (-register- :result-form-candidate (list :collect name) variable/head)
-      (with-unique-names (value-tmp cons-tmp)
-        `(let ((,value-tmp ,(-unwalk-form- value)))
-           (if ,variable/head
-               (let ((,cons-tmp (cons ,value-tmp nil)))
-                 (setf (cdr ,variable/last-cons) ,cons-tmp)
-                 (setq ,variable/last-cons ,cons-tmp))
-               (progn
-                 (setq ,variable/last-cons (cons ,value-tmp nil))
-                 (setq ,variable/head ,variable/last-cons))))))))
+    (bind (((value &key in into) (rest -clause-)))
+      ;; TODO implement collecting in parent iters
+      (declare (ignore in))
+      (bind (((variable/head variable/last-cons) (ensure-clause-data (list :collect into)
+                                                   (list (or into (-register- :temporary-variable nil "COLLECT/HEAD"))
+                                                         (-register- :temporary-variable nil "COLLECT/LAST-CONS"))))
+             ;; NOTE: we walk after registering the variables above
+             (value (-walk-form- value)))
+       (-register- :result-form-candidate (list :collect into) variable/head)
+       (with-unique-names (value-tmp cons-tmp)
+         `(let ((,value-tmp ,(-unwalk-form- value)))
+            (if ,variable/head
+                (let ((,cons-tmp (cons ,value-tmp nil)))
+                  (setf (cdr ,variable/last-cons) ,cons-tmp)
+                  (setq ,variable/last-cons ,cons-tmp))
+                (progn
+                  (setq ,variable/last-cons (cons ,value-tmp nil))
+                  (setq ,variable/head ,variable/last-cons)))))))))
 
 (def clause finally
   (clause-of-kind? 'finally)

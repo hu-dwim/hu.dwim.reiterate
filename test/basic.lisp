@@ -75,3 +75,17 @@
                                          (unless (first-time? :in outer)
                                            (collect ","))
                                          (collect "x"))))))))
+
+(def test test/basic/for/in-list ()
+  (is (equal '(a x b y)
+             (eval '(iter (for i :in-list '(a b c))
+                          (for j :in-list '(x y))
+                          (collect i)
+                          (collect j))))))
+
+(def test test/basic/for/in-vector ()
+  (is (equal '(a x b y)
+             (eval '(iter (for i :in-vector #(a b c))
+                          (for j :in-vector #(x y))
+                          (collect i)
+                          (collect j))))))

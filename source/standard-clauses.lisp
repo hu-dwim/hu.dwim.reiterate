@@ -6,20 +6,29 @@
 
 (in-package :hu.dwim.reiterate)
 
+(def clause next
+  (named-clause-of-kind? next)
+  (progn
+    (unless (and (length= 2 -clause-)
+                 (typep (second -clause-) 'variable-name))
+      (iterate-compile-error "Unable to parse clause ~S" -clause-))
+    (expand-to-generator-stepper (second -clause-) :whole -clause-)))
+
 (def clause for/in-list
   (named-clause-of-kind? for in-list)
   (progn
     (unless (<= 4 (length -clause-) 4)
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
     (bind ((the-list (-walk-form- (fourth -clause-)))
-           (variable/car (-register- :variable (second -clause-)))
+           (variable/car (second -clause-))
            (variable/current-cons (-register- :variable "IN-LIST/CURRENT-CONS" (-unwalk-form- the-list))))
-      `(progn
-         (unless ,variable/current-cons
-           (go ,(end-label-of *loop-form*)))
-         (prog1
-             (setq ,variable/car (car ,variable/current-cons))
-           (setq ,variable/current-cons (cdr ,variable/current-cons)))))))
+      (expand-to-generator-stepper
+       (-register- :generator variable/car
+                   `(prog1
+                        (setq ,variable/car (car ,variable/current-cons))
+                      (setq ,variable/current-cons (cdr ,variable/current-cons)))
+                   variable/current-cons)
+       :whole -clause-))))
 
 (def clause for/in-vector
   (named-clause-of-kind? for in-vector)
@@ -27,16 +36,17 @@
     (unless (<= 4 (length -clause-) 4)
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
     (bind ((the-vector (fourth -clause-))
-           (variable/element (-register- :variable (second -clause-)))
+           (variable/element (second -clause-))
            (variable/vector  (-register- :variable "IN-VECTOR/VECTOR" (-unwalk-form- (-walk-form- the-vector))))
            (variable/length  (-register- :variable "IN-VECTOR/LENGTH" `(length ,variable/vector)))
            (variable/index   (-register- :variable "IN-VECTOR/INDEX" 0)))
-      `(progn
-         (when (>= ,variable/index ,variable/length)
-           (go ,(end-label-of *loop-form*)))
-         (prog1
-             (setq ,variable/element (aref ,variable/vector ,variable/index))
-           (incf ,variable/index))))))
+      (expand-to-generator-stepper
+       (-register- :generator variable/element
+                   `(prog1
+                        (setq ,variable/element (aref ,variable/vector ,variable/index))
+                      (incf ,variable/index))
+                   `(< ,variable/index ,variable/length))
+       :whole -clause-))))
 
 (def clause repeat
   (clause-of-kind? repeat)

@@ -30,6 +30,14 @@
             `(-register- :result-form-candidate (list ,clause-data-key-name into) ,variable-name))
          (maybe-wrap-with-progn (list ,@body))))))
 
+(def function expand-to-generator-stepper (name &key whole)
+  (bind (((:values stepper has-more-condition) (%lookup/generator whole (list name))))
+    `(progn
+       (unless ,has-more-condition
+         ;; TODO replace -loop-end- inside returned forms?
+         (go ,(end-label-of *loop-form*)))
+       ,stepper)))
+
 (def with-macro* with-different-iteration-context (position)
   (bind ((*loop-form* (elt *loop-form-stack* position))
          (*loop-form-stack* (subseq *loop-form-stack* position)))
@@ -87,6 +95,23 @@
     (log.debug "Registering result-form-candidate with key ~S, stack is ~A" name *loop-form-stack*)
     (setf (assoc-value (result-form-candidates-of *loop-form*) name :test 'equal) value)))
 
+(def function %register/generator (whole args)
+  (bind (((name stepper has-more-condition) args))
+    (%register/variable whole (list name))
+    (setf (assoc-value (generators-of *loop-form*) name)
+          (list :stepper stepper :has-more-condition has-more-condition))
+    name))
+
+(def function %lookup/generator (whole args)
+  (bind ((name (first args)))
+    (unless (length= 1 args)
+      (iterate-compile-error "~S: don't know how to deal with ~S in clause handler ~S" '-lookup- (list* :generator args) whole))
+    (bind ((generator (assoc-value (generators-of *loop-form*) name))
+           ((&key stepper has-more-condition) generator))
+      (unless generator
+        (iterate-compile-error "Could not find generator ~S" name))
+      (values stepper has-more-condition))))
+
 (def definer clause (&whole whole-form name match-condition-form expander-form)
   (with-unique-names (whole)
     `(bind ((,whole ',whole-form))
@@ -122,7 +147,13 @@
                                    (%register/result-form-candidate ,whole args)
                                    (values))
                                   (:variable ; (... name initial-value)
-                                   (%register/variable ,whole args))))
+                                   (%register/variable ,whole args))
+                                  (:generator ; (... name stepper has-more-condition)
+                                   (%register/generator ,whole args))))
+                              (-lookup- (kind &rest args)
+                                (ecase kind
+                                  (:generator
+                                   (%lookup/generator ,whole args))))
                               (-walk-form- (node &optional (parent *loop-form*) (environment (walk-environment/loop-body-of *loop-form*)))
                                 (check-type parent walked-form)
                                 (log.debug "Will walk ~S in context ~A" node *loop-form*)

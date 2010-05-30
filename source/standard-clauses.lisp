@@ -14,8 +14,12 @@
     (bind ((the-list (-walk-form- (fourth -clause-)))
            (variable/car (-register- :variable (second -clause-)))
            (variable/current-cons (-register- :variable "IN-LIST/CURRENT-CONS" (-unwalk-form- the-list))))
-      (-register- :exit-condition/after-loop-body `(atom (setq ,variable/current-cons (cdr ,variable/current-cons))))
-      (-walk-form- `(setq ,variable/car (car ,variable/current-cons))))))
+      `(progn
+         (unless ,variable/current-cons
+           (go ,(end-label-of *loop-form*)))
+         (prog1
+             (setq ,variable/car (car ,variable/current-cons))
+           (setq ,variable/current-cons (cdr ,variable/current-cons)))))))
 
 (def clause for/in-vector
   (named-clause-of-kind? for in-vector)
@@ -27,10 +31,12 @@
            (variable/vector  (-register- :variable "IN-VECTOR/VECTOR" (-unwalk-form- (-walk-form- the-vector))))
            (variable/length  (-register- :variable "IN-VECTOR/LENGTH" `(length ,variable/vector)))
            (variable/index   (-register- :variable "IN-VECTOR/INDEX" 0)))
-      (-register- :exit-condition/before-loop-body `(>= ,variable/index ,variable/length))
-      (-walk-form- `(progn
-                      (setq ,variable/element (aref ,variable/vector ,variable/index))
-                      (incf ,variable/index))))))
+      `(progn
+         (when (>= ,variable/index ,variable/length)
+           (go ,(end-label-of *loop-form*)))
+         (prog1
+             (setq ,variable/element (aref ,variable/vector ,variable/index))
+           (incf ,variable/index))))))
 
 (def clause repeat
   (clause-of-kind? repeat)
@@ -39,8 +45,11 @@
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
     (bind ((count (-walk-form- (second -clause-)))
            (variable (-register- :variable "REPEAT/COUNTER" (-unwalk-form- count))))
-      (-register- :exit-condition/before-loop-body `(<= ,variable 0))
-      (-walk-form- `(decf ,variable)))))
+      `(progn
+         (when (<= ,variable 0)
+           (go ,(end-label-of *loop-form*)))
+         (decf ,variable)
+         (values)))))
 
 (def clause collect
   (clause-of-kind? collect collecting)
@@ -54,14 +63,14 @@
                                                            (-register- :variable "COLLECT/LAST-CONS" nil)))))
           (-register- :result-form-candidate (list :collect into) variable/head)
           (with-unique-names (value-tmp cons-tmp)
-            (-walk-form- `(let ((,value-tmp ,(-unwalk-form- (-walk-form- value))))
-                            (if ,variable/head
-                                (let ((,cons-tmp (cons ,value-tmp nil)))
-                                  (setf (cdr ,variable/last-cons) ,cons-tmp)
-                                  (setq ,variable/last-cons ,cons-tmp))
-                                (progn
-                                  (setq ,variable/last-cons (cons ,value-tmp nil))
-                                  (setq ,variable/head ,variable/last-cons)))))))))))
+            `(let ((,value-tmp ,(-unwalk-form- (-walk-form- value))))
+               (if ,variable/head
+                   (let ((,cons-tmp (cons ,value-tmp nil)))
+                     (setf (cdr ,variable/last-cons) ,cons-tmp)
+                     (setq ,variable/last-cons ,cons-tmp))
+                   (progn
+                     (setq ,variable/last-cons (cons ,value-tmp nil))
+                     (setq ,variable/head ,variable/last-cons))))))))))
 
 (def clause sum
   (clause-of-kind? sum summing)
@@ -92,6 +101,6 @@
   (bind (((&key in) (rest -clause-)))
     (with-possibly-different-iteration-context (in :clause -clause-)
       (bind ((variable/flag (-register- :variable "FIRST-TIME/FLAG" #t)))
-        (-walk-form- `(prog1
-                          ,variable/flag
-                        (setq ,variable/flag #f)))))))
+        `(prog1
+             ,variable/flag
+           (setq ,variable/flag #f))))))

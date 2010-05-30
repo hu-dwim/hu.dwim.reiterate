@@ -28,7 +28,7 @@
                                 (or into (-register- :variable ,temporary-variable-name-prefix ,initial-value)))))
          ,(when result-form-candidate
             `(-register- :result-form-candidate (list ,clause-data-key-name into) ,variable-name))
-         (-walk-form- (maybe-wrap-with-progn (list ,@body)))))))
+         (maybe-wrap-with-progn (list ,@body))))))
 
 (def with-macro* with-different-iteration-context (position)
   (bind ((*loop-form* (elt *loop-form-stack* position))
@@ -171,9 +171,8 @@
           (with-possibly-different-iteration-context ((loop-stack-position form) :clause form)
             (bind ((result (multiple-value-list (funcall expander form))))
               (log.debug "Expanded ~S into ~S" form result)
-              (setf result (if (length= 0 result)
-                               (make-instance 'free-application-form :operator 'values :arguments '())
-                               (first result)))
-              (check-type result walked-form)
+              (setf result (make-instance 'unwalked-form :source (if (length= 0 result)
+                                                                     '(values)
+                                                                     (first result))))
               (return-from walk-form/compound result)))))))
   (call-next-layered-method))

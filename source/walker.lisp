@@ -75,6 +75,10 @@
     (with-form-object (*loop-form* 'loop-form parent :whole form :name name :body body
                                    :walk-environment/enclosing walk-environment
                                    :walk-environment/loop-body (hu.dwim.walker::copy-walk-environment walk-environment))
+      (flet ((augment (type value)
+               (walk-environment/augment! (walk-environment/loop-body-of *loop-form*) type value)))
+        (augment :tag (top-label-of *loop-form*))
+        (augment :tag (end-label-of *loop-form*)))
       (bind ((body-conses (body-conses-of *loop-form*)))
         ;; register which conses are part of our body, so that we can properly handle nested usage later
         (labels ((recurse (node)

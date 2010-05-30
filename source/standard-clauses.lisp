@@ -90,12 +90,12 @@
 (def clause count
   (clause-of-kind? count counting)
   (clause-expander/single-named-variable (variable/sum 0 :sum :result-form-candidate #t)
-    (with-unique-names (tmp)
-      `(let ((,tmp ,(-unwalk-form- (-walk-form- value))))
+    (with-unique-names (value-tmp)
+      `(let ((,value-tmp ,(-unwalk-form- (-walk-form- value))))
          (cond
-           ((numberp ,tmp)
-            (incf ,variable/sum ,tmp))
-           (,tmp
+           ((numberp ,value-tmp)
+            (incf ,variable/sum ,value-tmp))
+           (,value-tmp
             (incf ,variable/sum 1)))))))
 
 (def clause initially

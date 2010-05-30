@@ -18,6 +18,11 @@
         :hu.dwim.util
         :metabang-bind)
   (:export #:for
+           #:in
+           #:in-list
+           #:in-vector
+           #:next
+           #:generate
            #:repeat
            #:collect
            #:collecting

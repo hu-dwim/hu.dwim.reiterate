@@ -134,6 +134,7 @@
                                   (:epilogue
                                    (appendf (forms/epilogue-of *loop-form*) args)
                                    (values))
+                                  ;; TODO drop this two?
                                   (:exit-condition/before-loop-body
                                    (appendf (exit-conditions/before-loop-body-of *loop-form*) args)
                                    (values))

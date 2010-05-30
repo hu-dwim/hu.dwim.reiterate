@@ -82,7 +82,9 @@
                                (reiterate-toplevel-macro-name? (first node)))
                      (log.debug "Registering as body of ~A ~S" *loop-form* node)
                      (setf (gethash node body-conses) #t)
-                     (map nil #'recurse node))))
+                     (do ((cons node (cdr cons)))
+                         ((not (consp cons)))
+                       (recurse (car cons))))))
           (recurse body))))))
 
 (for-each-iterator-alias alias

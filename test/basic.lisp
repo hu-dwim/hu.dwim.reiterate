@@ -81,11 +81,17 @@
              (eval '(iter (for i :in-list '(a b c))
                           (for j :in-list '(x y))
                           (collect i)
-                          (collect j))))))
+                          (collect j)))))
+  (is (equal '(1 2)
+             (eval '(iter outer
+                     (iter (collect (for x :in-list '(1 2)) :in outer)))))))
 
 (def test test/basic/for/in-vector ()
   (is (equal '(a x b y)
              (eval '(iter (for i :in-vector #(a b c))
                           (for j :in-vector #(x y))
                           (collect i)
-                          (collect j))))))
+                          (collect j)))))
+  (is (equal '(1 2)
+             (eval '(iter outer
+                     (iter (collect (for x :in-vector #(1 2)) :in outer)))))))

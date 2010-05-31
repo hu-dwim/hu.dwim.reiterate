@@ -75,7 +75,7 @@
           (name-error))))
     (with-form-object (*loop-form* 'loop-form parent :whole form :name name :body body
                                    :walk-environment/enclosing walk-environment
-                                   :walk-environment/loop-body (hu.dwim.walker::copy-walk-environment walk-environment))
+                                   :walk-environment/loop-body (walk-environment/copy walk-environment))
       (flet ((augment (type value)
                (walk-environment/augment! (walk-environment/loop-body-of *loop-form*) type value)))
         (augment :tag (top-label-of *loop-form*))

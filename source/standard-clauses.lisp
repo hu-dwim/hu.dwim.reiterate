@@ -14,46 +14,66 @@
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
     (expand-to-generator-stepper (second -clause-))))
 
+(def function register-generator/in-list (name the-list mutable?)
+  (if mutable?
+      (bind ((variable/previous-cons (register/variable "IN-LIST/PREVIOUS-CONS" #t))
+             (variable/current-cons (register/variable "IN-LIST/CURRENT-CONS" the-list))
+             (place `(car ,variable/previous-cons))
+             (stepper `(progn
+                         (setq ,variable/previous-cons ,variable/current-cons)
+                         (setq ,variable/current-cons (cdr ,variable/current-cons)))))
+        (register/generator name place stepper :stepper-place variable/current-cons :mutable mutable?))
+      (bind ((variable/current-cons (register/variable "IN-LIST/CURRENT-CONS" the-list))
+             (place `(car ,variable/current-cons))
+             (stepper `(setq ,variable/current-cons (cdr ,variable/current-cons))))
+        (register/generator name place stepper :place-stepper variable/current-cons :mutable mutable?))))
+
 (def clause for/in-list
   (named-clause-of-kind? for in-list)
   (bind (((name nil the-list &key (mutable #t)) (rest -clause-))
          (the-list (-unwalk-form- (-walk-form- the-list))))
     (expand-to-generator-stepper
-     (if mutable
-         (bind ((variable/previous-cons (register/variable "IN-LIST/PREVIOUS-CONS" #t))
-                (variable/current-cons (register/variable "IN-LIST/CURRENT-CONS" the-list))
-                (place `(car ,variable/previous-cons))
-                (stepper `(progn
-                            (setq ,variable/previous-cons ,variable/current-cons)
-                            (setq ,variable/current-cons (cdr ,variable/current-cons)))))
-           (register/generator name place stepper :stepper-place variable/current-cons :mutable mutable))
-         (bind ((variable/current-cons (register/variable "IN-LIST/CURRENT-CONS" the-list))
-                (place `(car ,variable/current-cons))
-                (stepper `(setq ,variable/current-cons (cdr ,variable/current-cons))))
-           (register/generator name place stepper :place-stepper variable/current-cons :mutable mutable))))))
+     (register-generator/in-list name the-list mutable))))
+
+(def clause generate/in-list
+  (named-clause-of-kind? generate in-list)
+  (bind (((name nil the-list &key (mutable #t)) (rest -clause-))
+         (the-list (-unwalk-form- (-walk-form- the-list))))
+    (register-generator/in-list name the-list mutable)
+    (values)))
+
+(def function register-generator/in-vector (name the-vector mutable?)
+  (bind ((variable/vector  (register/variable "IN-VECTOR/VECTOR" the-vector))
+         (variable/length  (register/variable "IN-VECTOR/LENGTH" `(length ,variable/vector))))
+    (if mutable?
+        (bind ((variable/index   (register/variable "IN-VECTOR/INDEX" 0)))
+          (register/generator name
+                              `(aref ,variable/vector (1- ,variable/index))
+                              `(incf ,variable/index)
+                              :stepper-place
+                              `(< ,variable/index ,variable/length)
+                              :mutable mutable?))
+        (bind ((variable/index   (register/variable "IN-VECTOR/INDEX" 0)))
+          (register/generator name
+                              `(aref ,variable/vector ,variable/index)
+                              `(incf ,variable/index)
+                              :place-stepper
+                              `(< ,variable/index ,variable/length)
+                              :mutable mutable?)))))
 
 (def clause for/in-vector
   (named-clause-of-kind? for in-vector)
   (bind (((name nil the-vector &key (mutable #t)) (rest -clause-))
-         (the-vector (-unwalk-form- (-walk-form- the-vector)))
-         (variable/vector  (register/variable "IN-VECTOR/VECTOR" the-vector))
-         (variable/length  (register/variable "IN-VECTOR/LENGTH" `(length ,variable/vector))))
+         (the-vector (-unwalk-form- (-walk-form- the-vector))))
     (expand-to-generator-stepper
-     (if mutable
-         (bind ((variable/index   (register/variable "IN-VECTOR/INDEX" 0)))
-           (register/generator name
-                               `(aref ,variable/vector (1- ,variable/index))
-                               `(incf ,variable/index)
-                               :stepper-place
-                               `(< ,variable/index ,variable/length)
-                               :mutable mutable))
-         (bind ((variable/index   (register/variable "IN-VECTOR/INDEX" 0)))
-           (register/generator name
-                               `(aref ,variable/vector ,variable/index)
-                               `(incf ,variable/index)
-                               :place-stepper
-                               `(< ,variable/index ,variable/length)
-                               :mutable mutable))))))
+     (register-generator/in-vector name the-vector mutable))))
+
+(def clause generate/in-vector
+  (named-clause-of-kind? generate in-vector)
+  (bind (((name nil the-vector &key (mutable #t)) (rest -clause-))
+         (the-vector (-unwalk-form- (-walk-form- the-vector))))
+    (register-generator/in-vector name the-vector mutable)
+    (values)))
 
 (def clause repeat
   (clause-of-kind? repeat)

@@ -45,6 +45,7 @@
    (variable-bindings/wrapping '() :initarg nil)
    (variable-bindings/body '() :initarg nil)
    (function-bindings/wrapping '() :initarg nil)
+   (inlined-functions '() :initarg nil)
    (macro-bindings/wrapping '() :initarg nil)
    (symbol-macro-bindings/wrapping '() :initarg nil)
    (top-label (generate-unique-name 'loop-top) :initarg nil)

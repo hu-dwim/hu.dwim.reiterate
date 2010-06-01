@@ -110,7 +110,8 @@
     name))
 
 (def (function e) register/function (name args body &key inline)
-  (declare (ignore inline)) ; TODO
+  (when inline
+    (pushnew name (inlined-functions-of *loop-form*)))
   (bind (((:slots walk-environment/loop-body) *loop-form*))
     (when (stringp name)
       (setf name (generate-unique-name name)))

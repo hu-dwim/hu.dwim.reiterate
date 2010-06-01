@@ -35,7 +35,7 @@
   (assert (layer-active-p 'reiterate))
   (bind (((:slots name body variable-bindings/wrapping variable-bindings/body top-label end-label
                   result-form-candidates symbol-macro-bindings/wrapping macro-bindings/wrapping
-                  function-bindings/wrapping
+                  function-bindings/wrapping inlined-functions
                   exit-conditions/before-loop-body exit-conditions/after-loop-body
                   forms/prologue forms/epilogue walk-environment/loop-body) *loop-form*)
          (expansion nil)
@@ -76,6 +76,7 @@
          (let* (,@variable-bindings/wrapping)
            (macrolet (,@macro-bindings/wrapping)
              (flet (,@function-bindings/wrapping)
+               (declare (inline ,@inlined-functions))
                (symbol-macrolet (,@symbol-macro-bindings/wrapping)
                  ,expansion
                  ,result-form))))))))

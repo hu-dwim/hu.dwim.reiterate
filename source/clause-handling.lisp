@@ -25,18 +25,10 @@
   `(bind (((value &key in into) (rest -clause-)))
      (with-possibly-different-iteration-context (in :clause -clause-)
        (bind ((,variable-name (ensure-clause-data (list ,clause-data-key-name into)
-                                (or into (-register- :variable ,temporary-variable-name-prefix ,initial-value)))))
+                                (or into (register/variable ,temporary-variable-name-prefix ,initial-value)))))
          ,(when result-form-candidate
-            `(-register- :result-form-candidate (list ,clause-data-key-name into) ,variable-name))
+            `(register/result-form-candidate (list ,clause-data-key-name into) ,variable-name))
          (maybe-wrap-with-progn (list ,@body))))))
-
-(def function expand-to-generator-stepper (name &key whole)
-  (bind (((:values stepper has-more-condition) (%lookup/generator whole (list name))))
-    `(progn
-       (unless ,has-more-condition
-         ;; TODO replace -loop-end- inside returned forms?
-         (go ,(end-label-of *loop-form*)))
-       ,stepper)))
 
 (def with-macro* with-different-iteration-context (position)
   (bind ((*loop-form* (elt *loop-form-stack* position))
@@ -64,13 +56,36 @@
       `(progn
          ,@forms)))
 
-(def function %register/variable (whole args)
-  (bind ((name (first args))
-         (initial-value (second args))
-         ((:slots walk-environment/loop-body) *loop-form*))
-    (unless (and (<= 1 (length args) 2)
-                 (typep name '(or string variable-name)))
-      (iterate-compile-error "~S: don't know how to deal with ~S in clause handler ~S" '-register- (list* :variable args) whole))
+(def function expand-to-generator-stepper (name &key (mutable #f))
+  (bind (((:values stepper has-more-condition place) (lookup/generator name)))
+    (if mutable
+        (not-yet-implemented)
+        (progn
+          (register/variable name)
+          `(progn
+             (unless ,has-more-condition
+               ;; TODO replace -loop-end- inside returned forms?
+               (go ,(end-label-of *loop-form*)))
+             (prog1
+                 (setq ,name ,place)
+               ,stepper))))))
+
+(def (function e) register/generator (name place stepper has-more-condition)
+  (setf (assoc-value (generators-of *loop-form*) name)
+        (list :stepper stepper
+              :has-more-condition has-more-condition
+              :place place))
+  name)
+
+(def (function e) lookup/generator (name)
+  (bind ((generator (assoc-value (generators-of *loop-form*) name))
+         ((&key stepper has-more-condition place) generator))
+    (unless generator
+      (iterate-compile-error "Could not find generator ~S" name))
+    (values stepper has-more-condition place)))
+
+(def function register/variable (name &optional (initial-value nil))
+  (bind (((:slots walk-environment/loop-body) *loop-form*))
     (when (stringp name)
       (setf name (generate-unique-name name)))
     (appendf (wrapping-bindings-of *loop-form*) `((,name ,initial-value)))
@@ -78,91 +93,44 @@
     (log.debug "Augmented environment with variable ~S in the context of ~A: ~A" name *loop-form* walk-environment/loop-body)
     name))
 
-(def function %register/result-form (whole args)
-  (unless (length= 1 args)
-    (iterate-compile-error "~S: result form should be one form in clause handler ~S" '-register- whole))
-  (bind ((result-form (first args)))
-    (log.debug "Registering result-form ~S, stack is ~A" result-form *loop-form-stack*)
-    (when (slot-boundp *loop-form* 'result-form)
-      (iterate-compile-error "The result form of ~A is already ~S while processing clause ~S" *loop-form* (result-form-of *loop-form*) whole))
-    (setf (result-form-of *loop-form*) result-form)))
+(def (function e) register/result-form (result-form)
+  (log.debug "Registering result-form ~S, stack is ~A" result-form *loop-form-stack*)
+  (when (slot-boundp *loop-form* 'result-form)
+    (iterate-compile-error "The result form of ~A is already ~S while processing clause ~S" *loop-form* (result-form-of *loop-form*) *clause*))
+  (setf (result-form-of *loop-form*) result-form))
 
-(def function %register/result-form-candidate (whole args)
-  (bind ((name (first args))
-         (value (second args)))
-    (unless (length= 2 args)
-      (iterate-compile-error "~S: don't know how to deal with ~S in clause handler ~S" '-register- (list* :result-form-candidate args) whole))
-    (log.debug "Registering result-form-candidate with key ~S, stack is ~A" name *loop-form-stack*)
-    (setf (assoc-value (result-form-candidates-of *loop-form*) name :test 'equal) value)))
+(def (function e) register/result-form-candidate (name value-form)
+  (log.debug "Registering result-form-candidate with key ~S, form ~S, stack is ~A" name value-form *loop-form-stack*)
+  (setf (assoc-value (result-form-candidates-of *loop-form*) name :test 'equal) value-form))
 
-(def function %register/generator (whole args)
-  (bind (((name stepper has-more-condition) args))
-    (%register/variable whole (list name))
-    (setf (assoc-value (generators-of *loop-form*) name)
-          (list :stepper stepper :has-more-condition has-more-condition))
-    name))
+(def (function e) register/prologue (form)
+ (appendf (forms/prologue-of *loop-form*) (list form))
+ (values))
 
-(def function %lookup/generator (whole args)
-  (bind ((name (first args)))
-    (unless (length= 1 args)
-      (iterate-compile-error "~S: don't know how to deal with ~S in clause handler ~S" '-lookup- (list* :generator args) whole))
-    (bind ((generator (assoc-value (generators-of *loop-form*) name))
-           ((&key stepper has-more-condition) generator))
-      (unless generator
-        (iterate-compile-error "Could not find generator ~S" name))
-      (values stepper has-more-condition))))
+(def (function e) register/epilogue (form)
+ (appendf (forms/epilogue-of *loop-form*) (list form))
+ (values))
 
-(def definer clause (&whole whole-form name match-condition-form expander-form)
-  (with-unique-names (whole)
-    `(bind ((,whole ',whole-form))
-       (macrolet
-           ((named-clause-of-kind? (kind &optional sub-kind)
-              `(funcall 'named-clause-of-kind? -clause- ',kind ',sub-kind))
-            (clause-of-kind? (&rest kinds)
-              `(or ,@(loop
-                       :for kind :in kinds
-                       :collect `(funcall 'clause-of-kind? -clause- ',kind)))))
-         (setf (find-clause-handler ',name)
-               (list (named-lambda clause-matcher (-clause-)
-                       ,match-condition-form)
-                     (named-lambda clause-expander (-clause-)
-                       (flet ((-register- (kind &rest args)
-                                (ecase kind
-                                  (:prologue
-                                   (appendf (forms/prologue-of *loop-form*) args)
-                                   (values))
-                                  (:epilogue
-                                   (appendf (forms/epilogue-of *loop-form*) args)
-                                   (values))
-                                  ;; TODO drop this two?
-                                  (:exit-condition/before-loop-body
-                                   (appendf (exit-conditions/before-loop-body-of *loop-form*) args)
-                                   (values))
-                                  (:exit-condition/after-loop-body
-                                   (appendf (exit-conditions/after-loop-body-of *loop-form*) args)
-                                   (values))
-                                  (:result-form
-                                   (%register/result-form ,whole args)
-                                   (values))
-                                  (:result-form-candidate ; (... name value)
-                                   (%register/result-form-candidate ,whole args)
-                                   (values))
-                                  (:variable ; (... name initial-value)
-                                   (%register/variable ,whole args))
-                                  (:generator ; (... name stepper has-more-condition)
-                                   (%register/generator ,whole args))))
-                              (-lookup- (kind &rest args)
-                                (ecase kind
-                                  (:generator
-                                   (%lookup/generator ,whole args))))
-                              (-walk-form- (node &optional (parent *loop-form*) (environment (walk-environment/loop-body-of *loop-form*)))
-                                (check-type parent walked-form)
-                                (log.debug "Will walk ~S in context ~A" node *loop-form*)
-                                (walk-form node :parent parent :environment environment))
-                              (-unwalk-form- (node)
-                                (unwalk-form node)))
-                         (declare (ignorable #'-register- #'-walk-form- #'-unwalk-form-))
-                         ,expander-form))))))))
+(def definer clause (name match-condition-form expander-form)
+  `(macrolet
+       ((named-clause-of-kind? (kind &optional sub-kind)
+          `(funcall 'named-clause-of-kind? -clause- ',kind ',sub-kind))
+        (clause-of-kind? (&rest kinds)
+          `(or ,@(loop
+                   :for kind :in kinds
+                   :collect `(funcall 'clause-of-kind? -clause- ',kind)))))
+     (setf (find-clause-handler ',name)
+           (list (named-lambda clause-matcher (-clause-)
+                   ,match-condition-form)
+                 (named-lambda clause-expander (-clause-)
+                   (flet ((-walk-form- (node &optional (parent *loop-form*) (environment (walk-environment/loop-body-of *loop-form*)))
+                            (check-type parent walked-form)
+                            (log.debug "Will walk ~S in context ~A" node *loop-form*)
+                            (walk-form node :parent parent :environment environment))
+                          (-unwalk-form- (node)
+                            (unwalk-form node)))
+                     (declare (ignorable #'-walk-form- #'-unwalk-form-))
+                     ,expander-form))))))
 
 (def type variable-name ()
   `(and symbol (not (member nil t))))
@@ -199,12 +167,13 @@
     (dolist (clause-handler (collect-namespace-values 'clause-handler))
       (bind (((matcher expander) clause-handler))
         (when (funcall matcher form)
-          (log.debug "Form ~S matched as a clause in stack ~A" form *loop-form-stack*)
-          (with-possibly-different-iteration-context ((loop-stack-position form) :clause form)
-            (bind ((result (multiple-value-list (funcall expander form))))
-              (log.debug "Expanded ~S into ~S" form result)
-              (setf result (make-instance 'unwalked-form :source (if (length= 0 result)
-                                                                     '(values)
-                                                                     (first result))))
-              (return-from walk-form/compound result)))))))
+          (bind ((*clause* form))
+            (log.debug "Form ~S matched as a clause in stack ~A" form *loop-form-stack*)
+            (with-possibly-different-iteration-context ((loop-stack-position form) :clause form)
+              (bind ((result (multiple-value-list (funcall expander form))))
+                (log.debug "Expanded ~S into ~S" form result)
+                (setf result (make-instance 'unwalked-form :source (if (length= 0 result)
+                                                                       '(values)
+                                                                       (first result))))
+                (return-from walk-form/compound result))))))))
   (call-next-layered-method))

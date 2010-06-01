@@ -19,6 +19,8 @@
 
 (def special-variable *loop-form*)
 
+(def special-variable *clause*)
+
 ;;;;;;
 ;;; a very simple hu.dwim.logger simulation so that our emacs coloring kicks in
 

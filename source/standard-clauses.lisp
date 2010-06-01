@@ -12,7 +12,7 @@
     (unless (and (length= 2 -clause-)
                  (typep (second -clause-) 'variable-name))
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
-    (expand-to-generator-stepper (second -clause-) :whole -clause-)))
+    (expand-to-generator-stepper (second -clause-))))
 
 (def clause for/in-list
   (named-clause-of-kind? for in-list)
@@ -20,15 +20,13 @@
     (unless (<= 4 (length -clause-) 4)
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
     (bind ((the-list (-walk-form- (fourth -clause-)))
-           (variable/car (second -clause-))
-           (variable/current-cons (-register- :variable "IN-LIST/CURRENT-CONS" (-unwalk-form- the-list))))
+           (name (second -clause-))
+           (variable/current-cons (register/variable "IN-LIST/CURRENT-CONS" (-unwalk-form- the-list))))
       (expand-to-generator-stepper
-       (-register- :generator variable/car
-                   `(prog1
-                        (setq ,variable/car (car ,variable/current-cons))
-                      (setq ,variable/current-cons (cdr ,variable/current-cons)))
-                   variable/current-cons)
-       :whole -clause-))))
+       (register/generator name
+                           `(car ,variable/current-cons)
+                           `(setq ,variable/current-cons (cdr ,variable/current-cons))
+                           variable/current-cons)))))
 
 (def clause for/in-vector
   (named-clause-of-kind? for in-vector)
@@ -37,16 +35,14 @@
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
     (bind ((the-vector (fourth -clause-))
            (variable/element (second -clause-))
-           (variable/vector  (-register- :variable "IN-VECTOR/VECTOR" (-unwalk-form- (-walk-form- the-vector))))
-           (variable/length  (-register- :variable "IN-VECTOR/LENGTH" `(length ,variable/vector)))
-           (variable/index   (-register- :variable "IN-VECTOR/INDEX" 0)))
+           (variable/vector  (register/variable "IN-VECTOR/VECTOR" (-unwalk-form- (-walk-form- the-vector))))
+           (variable/length  (register/variable "IN-VECTOR/LENGTH" `(length ,variable/vector)))
+           (variable/index   (register/variable "IN-VECTOR/INDEX" 0)))
       (expand-to-generator-stepper
-       (-register- :generator variable/element
-                   `(prog1
-                        (setq ,variable/element (aref ,variable/vector ,variable/index))
-                      (incf ,variable/index))
-                   `(< ,variable/index ,variable/length))
-       :whole -clause-))))
+       (register/generator variable/element
+                           `(aref ,variable/vector ,variable/index)
+                           `(incf ,variable/index)
+                           `(< ,variable/index ,variable/length))))))
 
 (def clause repeat
   (clause-of-kind? repeat)
@@ -54,7 +50,7 @@
     (unless (length= 2 -clause-)
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
     (bind ((count (-walk-form- (second -clause-)))
-           (variable (-register- :variable "REPEAT/COUNTER" (-unwalk-form- count))))
+           (variable (register/variable "REPEAT/COUNTER" (-unwalk-form- count))))
       `(progn
          (when (<= ,variable 0)
            (go ,(end-label-of *loop-form*)))
@@ -69,9 +65,9 @@
     (bind (((value &key in into) (rest -clause-)))
       (with-possibly-different-iteration-context (in :clause -clause-)
         (bind (((variable/head variable/last-cons) (ensure-clause-data (list :collect into)
-                                                     (list (or into (-register- :variable "COLLECT/HEAD" nil))
-                                                           (-register- :variable "COLLECT/LAST-CONS" nil)))))
-          (-register- :result-form-candidate (list :collect into) variable/head)
+                                                     (list (or into (register/variable "COLLECT/HEAD" nil))
+                                                           (register/variable "COLLECT/LAST-CONS" nil)))))
+          (register/result-form-candidate (list :collect into) variable/head)
           (with-unique-names (value-tmp cons-tmp)
             `(let ((,value-tmp ,(-unwalk-form- (-walk-form- value))))
                (if ,variable/head
@@ -100,17 +96,17 @@
 
 (def clause initially
   (clause-of-kind? initially)
-  (-register- :prologue (maybe-wrap-with-progn (rest -clause-))))
+  (register/prologue (maybe-wrap-with-progn (rest -clause-))))
 
 (def clause finally
   (clause-of-kind? finally)
-  (-register- :epilogue (maybe-wrap-with-progn (rest -clause-))))
+  (register/epilogue (maybe-wrap-with-progn (rest -clause-))))
 
 (def clause first-time?
   (clause-of-kind? first-time?)
   (bind (((&key in) (rest -clause-)))
     (with-possibly-different-iteration-context (in :clause -clause-)
-      (bind ((variable/flag (-register- :variable "FIRST-TIME/FLAG" #t)))
+      (bind ((variable/flag (register/variable "FIRST-TIME/FLAG" #t)))
         `(prog1
              ,variable/flag
            (setq ,variable/flag #f))))))

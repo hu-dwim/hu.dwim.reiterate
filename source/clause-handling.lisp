@@ -11,11 +11,11 @@
 (def macro ensure-clause-data (key &body value)
   (with-unique-names (entry)
     (once-only (key)
-      `(bind ((,entry (assoc-value (clause-data-storage-of *loop-form*) ,key :test #'equal)))
+      `(bind ((,entry (assoc-value (clause-data-of *loop-form*) ,key :test #'equal)))
          (or ,entry
              (progn
                (log.debug "Registering new clause data with key ~S in loop ~A" ,key *loop-form*)
-               (setf (assoc-value (clause-data-storage-of *loop-form*) ,key :test #'equal)
+               (setf (assoc-value (clause-data-of *loop-form*) ,key :test #'equal)
                      (progn ,@value))))))))
 
 (def macro clause-expander/single-named-variable ((variable-name initial-value clause-data-key-name
@@ -56,41 +56,87 @@
       `(progn
          ,@forms)))
 
-(def function expand-to-generator-stepper (name &key (mutable #f))
-  (bind (((:values stepper has-more-condition place) (lookup/generator name)))
-    (if mutable
-        (not-yet-implemented)
-        (progn
-          (register/variable name)
-          `(progn
-             (unless ,has-more-condition
-               ;; TODO replace -loop-end- inside returned forms?
-               (go ,(end-label-of *loop-form*)))
-             (prog1
-                 (setq ,name ,place)
-               ,stepper))))))
+(def function expand-to-generator-stepper (name)
+  (bind (((&key place stepper has-more-condition variable stepper-place-order &allow-other-keys) (lookup/generator name)))
+    `(progn
+       (unless ,has-more-condition
+         ;; TODO replace -loop-end- inside returned forms?
+         (go ,(end-label-of *loop-form*)))
+       ,@(ecase stepper-place-order
+           (:place-stepper `((prog1
+                                 (setq ,variable ,place)
+                               ,stepper)))
+           (:stepper-place `(,stepper
+                             (setq ,variable ,place)))))))
 
-(def (function e) register/generator (name place stepper has-more-condition)
-  (setf (assoc-value (generators-of *loop-form*) name)
-        (list :stepper stepper
-              :has-more-condition has-more-condition
-              :place place))
+(def (function e) register/generator (name place stepper stepper-place-order has-more-condition &key (mutable #f))
+  (check-type stepper-place-order (member :stepper-place :place-stepper))
+  (bind ((variable/value nil))
+    (if mutable
+        (with-unique-names (new-value)
+          (setf variable/value (register/variable* (string name) :scope :wrapping))
+          (register/symbol-macro name `(,name))
+          (register/function name () (list place) :inline #t)
+          (register/function `(setf ,name) `(,new-value) `((setf ,place ,new-value)) :inline #t))
+        (setf variable/value (register/variable name)))
+    (setf (assoc-value (generators-of *loop-form*) name)
+          (list :place place
+                :stepper stepper
+                :stepper-place-order stepper-place-order
+                :has-more-condition has-more-condition
+                :mutable mutable ; not strictly needed, kept for debugging clarity
+                :variable variable/value)))
   name)
 
 (def (function e) lookup/generator (name)
-  (bind ((generator (assoc-value (generators-of *loop-form*) name))
-         ((&key stepper has-more-condition place) generator))
+  (bind ((generator (assoc-value (generators-of *loop-form*) name)))
     (unless generator
       (iterate-compile-error "Could not find generator ~S" name))
-    (values stepper has-more-condition place)))
+    generator))
 
-(def function register/variable (name &optional (initial-value nil))
+(def (function e) register/variable (name &optional (initial-value nil))
+  (register/variable* name :initial-value initial-value))
+
+(def (function e) register/variable* (name &key (initial-value nil) (scope :wrapping))
+  (bind (((:slots walk-environment/loop-body) *loop-form*)
+         (storage-slot-name (ecase scope
+                              (:wrapping 'variable-bindings/wrapping)
+                              (:body 'variable-bindings/loop-body))))
+    (when (stringp name)
+      (setf name (generate-unique-name name)))
+    (appendf (slot-value *loop-form* storage-slot-name) `((,name ,initial-value)))
+    (walk-environment/augment! walk-environment/loop-body :variable name)
+    (log.debug "Augmented environment with variable ~S in the context of ~A: ~A" name *loop-form* walk-environment/loop-body)
+    name))
+
+(def (function e) register/function (name args body &key inline)
+  (declare (ignore inline)) ; TODO
   (bind (((:slots walk-environment/loop-body) *loop-form*))
     (when (stringp name)
       (setf name (generate-unique-name name)))
-    (appendf (wrapping-bindings-of *loop-form*) `((,name ,initial-value)))
-    (walk-environment/augment! walk-environment/loop-body :variable name)
-    (log.debug "Augmented environment with variable ~S in the context of ~A: ~A" name *loop-form* walk-environment/loop-body)
+    (appendf (function-bindings/wrapping-of *loop-form*) `((,name ,args ,@body)))
+    (walk-environment/augment! walk-environment/loop-body :function name)
+    (log.debug "Augmented environment with function ~S in the context of ~A: ~A" name *loop-form* walk-environment/loop-body)
+    name))
+
+(def (function e) register/macro (name args body)
+  (bind (((:slots walk-environment/enclosing walk-environment/loop-body) *loop-form*))
+    (when (stringp name)
+      (setf name (generate-unique-name name)))
+    (appendf (macro-bindings/wrapping-of *loop-form*) `((,name ,args ,@body)))
+    (walk-environment/augment! walk-environment/loop-body :macro name
+                               (hu.dwim.walker::parse-macro-definition name args body
+                                                                       (walk-environment/lexical-environment walk-environment/enclosing)))
+    (log.debug "Augmented environment with macro ~S in the context of ~A: ~A" name *loop-form* walk-environment/loop-body)
+    name))
+
+(def (function e) register/symbol-macro (name expansion)
+  (bind (((:slots walk-environment/loop-body) *loop-form*))
+    (when (stringp name)
+      (setf name (generate-unique-name name)))
+    (appendf (symbol-macro-bindings/wrapping-of *loop-form*) `((,name ,expansion)))
+    (walk-environment/augment! walk-environment/loop-body :symbol-macro name expansion)
+    (log.debug "Augmented environment with symbol-macro ~S in the context of ~A: ~A" name *loop-form* walk-environment/loop-body)
     name))
 
 (def (function e) register/result-form (result-form)

@@ -15,5 +15,6 @@
   :components ((:module "test"
                 :components ((:file "package")
                              (:file "basic" :depends-on ("suite"))
+                             (:file "lexenv" :depends-on ("suite"))
                              (:file "nesting" :depends-on ("suite"))
                              (:file "suite" :depends-on ("package"))))))

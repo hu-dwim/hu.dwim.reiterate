@@ -30,14 +30,14 @@
 
 (def clause for/in-list
   (named-clause-of-kind? for in-list)
-  (bind (((name nil the-list &key (mutable #t)) (rest -clause-))
+  (bind (((name nil the-list &key mutable) (rest -clause-))
          (the-list (-unwalk-form- (-walk-form- the-list))))
     (expand-to-generator-stepper
      (register-generator/in-list name the-list mutable))))
 
 (def clause generate/in-list
   (named-clause-of-kind? generate in-list)
-  (bind (((name nil the-list &key (mutable #t)) (rest -clause-))
+  (bind (((name nil the-list &key mutable) (rest -clause-))
          (the-list (-unwalk-form- (-walk-form- the-list))))
     (register-generator/in-list name the-list mutable)
     (values)))
@@ -63,14 +63,14 @@
 
 (def clause for/in-vector
   (named-clause-of-kind? for in-vector)
-  (bind (((name nil the-vector &key (mutable #t)) (rest -clause-))
+  (bind (((name nil the-vector &key mutable) (rest -clause-))
          (the-vector (-unwalk-form- (-walk-form- the-vector))))
     (expand-to-generator-stepper
      (register-generator/in-vector name the-vector mutable))))
 
 (def clause generate/in-vector
   (named-clause-of-kind? generate in-vector)
-  (bind (((name nil the-vector &key (mutable #t)) (rest -clause-))
+  (bind (((name nil the-vector &key mutable) (rest -clause-))
          (the-vector (-unwalk-form- (-walk-form- the-vector))))
     (register-generator/in-vector name the-vector mutable)
     (values)))

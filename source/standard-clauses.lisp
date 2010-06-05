@@ -90,25 +90,22 @@
 
 (def clause collect
   (clause-of-kind? collect collecting)
-  (progn
-    (unless (<= 2 (length -clause-))
-      (iterate-compile-error "Unable to parse clause ~S" -clause-))
-    (bind (((value &key in into) (rest -clause-))
-           (value (-unwalk-form- (-walk-form- value))))
-      (with-possibly-different-iteration-context (in :clause -clause-)
-        (bind (((variable/head variable/last-cons) (ensure-clause-data (list :collect into)
-                                                     (list (or into (register/variable "COLLECT/HEAD" nil))
-                                                           (register/variable "COLLECT/LAST-CONS" nil)))))
-          (register/result-form-candidate (list :collect into) variable/head)
-          (with-unique-names (value-tmp cons-tmp)
-            `(let ((,value-tmp ,value))
-               (if ,variable/head
-                   (let ((,cons-tmp (cons ,value-tmp nil)))
-                     (setf (cdr ,variable/last-cons) ,cons-tmp)
-                     (setq ,variable/last-cons ,cons-tmp))
-                   (progn
-                     (setq ,variable/last-cons (cons ,value-tmp nil))
-                     (setq ,variable/head ,variable/last-cons))))))))))
+  (bind (((value &key in into) (rest -clause-))
+         (value (-unwalk-form- (-walk-form- value))))
+    (with-possibly-different-iteration-context (in :clause -clause-)
+      (bind (((variable/head variable/last-cons) (ensure-clause-data (list :collect into)
+                                                   (list (register/variable (or into "COLLECT/HEAD") nil)
+                                                         (register/variable "COLLECT/LAST-CONS" nil)))))
+        (register/result-form-candidate (list :collect into) variable/head)
+        (with-unique-names (value-tmp cons-tmp)
+          `(let ((,value-tmp ,value))
+             (if ,variable/head
+                 (let ((,cons-tmp (cons ,value-tmp nil)))
+                   (setf (cdr ,variable/last-cons) ,cons-tmp)
+                   (setq ,variable/last-cons ,cons-tmp))
+                 (progn
+                   (setq ,variable/last-cons (cons ,value-tmp nil))
+                   (setq ,variable/head ,variable/last-cons)))))))))
 
 (def clause sum
   (clause-of-kind? sum summing)

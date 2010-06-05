@@ -56,3 +56,14 @@
                                   (iter level3
                                         (for i :in-list '(1 2 3))
                                         (collect i :in level1)))))))))
+
+(def test test/nesting/5 ()
+  (is (equal '(a 42 b 42 c 42)
+             (eval '(iter named outer
+                          (for i :in-list '(a b c))
+                          (macrolet ((wrapper (&body body)
+                                       `(progn
+                                          (collect i)
+                                          ,@body)))
+                            (wrapper
+                             (collect 42))))))))

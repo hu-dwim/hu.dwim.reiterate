@@ -59,7 +59,12 @@
 (def test test/basic/finally ()
   (is (= 42 (eval '(iter named alma
                     (repeat 1)
-                    (finally (return-from alma 42)))))))
+                    (finally (return-from alma 42))))))
+  (is (equal '(101 42 42) (eval '(iter
+                                  (repeat 2)
+                                  (collect 42 :into x)
+                                  (progn
+                                    (finally (return (list* 101 x)))))))))
 
 (def test test/basic/first-time? ()
   (is (equal '("x" "," "x" "," "x")

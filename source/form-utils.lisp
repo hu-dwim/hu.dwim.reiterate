@@ -32,3 +32,17 @@
       form
       `(the ,type ,form)))
 
+(def function %maybe-wrap-with-bindings-fn (binder bindings body binding-extractor declaration-extractor)
+  (if bindings
+      `(,binder (,@(funcall binding-extractor bindings))
+         ,@(bind ((declarations (funcall declaration-extractor bindings)))
+             (when declarations
+               `((declare ,@declarations))))
+         ,body)
+      body))
+
+(def macro maybe-wrap-with-bindings ((binder bindings &key (binding-extractor ''identity)
+                                             (declaration-extractor '(constantly '())))
+                                      &body body)
+  (assert (length= 1 body))
+  `(%maybe-wrap-with-bindings-fn ',binder ,bindings ,(first body) ,binding-extractor ,declaration-extractor))

@@ -77,21 +77,25 @@
             `(tagbody
                 ,@forms/prologue
               ,top-label
-                (let* (,@(variable-bindings/extract-primitive-bindings variable-bindings/body))
-                  (declare ,@(variable-bindings/extract-type-declarations variable-bindings/body))
-                  ,@(generate-exit-jumps exit-conditions/before-loop-body)
-                  ,@body
-                  ,@(generate-exit-jumps exit-conditions/after-loop-body))
+                ,(maybe-wrap-with-bindings (let* variable-bindings/body
+                                                :binding-extractor 'variable-bindings/extract-primitive-bindings
+                                                :declaration-extractor 'variable-bindings/extract-type-declarations)
+                  `(progn
+                     ,@(generate-exit-jumps exit-conditions/before-loop-body)
+                     ,@body
+                     ,@(generate-exit-jumps exit-conditions/after-loop-body)))
                 (go ,top-label)
               ,end-label
                 ,@forms/epilogue))
       (log.debug "Building result form for ~A" *loop-form*)
       `(block ,name
-         (let* (,@(variable-bindings/extract-primitive-bindings variable-bindings/wrapping))
-           (declare ,@(variable-bindings/extract-type-declarations variable-bindings/wrapping))
-           (macrolet (,@macro-bindings/wrapping)
-             (flet (,@function-bindings/wrapping)
-               (declare (inline ,@inlined-functions))
-               (symbol-macrolet (,@symbol-macro-bindings/wrapping)
-                 ,expansion
-                 ,result-form))))))))
+         ,(maybe-wrap-with-bindings (let* variable-bindings/wrapping
+                                          :binding-extractor 'variable-bindings/extract-primitive-bindings
+                                          :declaration-extractor 'variable-bindings/extract-type-declarations)
+            (maybe-wrap-with-bindings (macrolet macro-bindings/wrapping)
+              (maybe-wrap-with-bindings (flet function-bindings/wrapping
+                                              :declaration-extractor (lambda (bindings)
+                                                                       `((inline ,@(mapcar 'first bindings)))))
+                (maybe-wrap-with-bindings (symbol-macrolet symbol-macro-bindings/wrapping)
+                  `(progn ,expansion
+                          ,result-form)))))))))

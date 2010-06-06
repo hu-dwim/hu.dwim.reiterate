@@ -46,7 +46,7 @@
 
 (def function expand ()
   (assert (layer-active-p 'reiterate))
-  (bind (((:slots name body variable-bindings/wrapping variable-bindings/body top-label next-iteration-label end-label
+  (bind (((:slots name body variable-bindings/wrapping variable-bindings/body label/top label/next-iteration label/end
                   result-form-candidates symbol-macro-bindings/wrapping macro-bindings/wrapping
                   function-bindings/wrapping inlined-functions
                   exit-conditions/before-loop-body exit-conditions/after-loop-body
@@ -72,11 +72,11 @@
              (loop
                :for condition :in conditions
                :collect `(when ,condition
-                           (go ,end-label)))))
+                           (go ,label/end)))))
       (setf expansion
             `(tagbody
                 ,@forms/prologue
-              ,top-label
+              ,label/top
                 ,(maybe-wrap-with-bindings (let* variable-bindings/body
                                                 :binding-extractor 'variable-bindings/extract-primitive-bindings
                                                 :declaration-extractor 'variable-bindings/extract-type-declarations)
@@ -84,10 +84,10 @@
                      ,@(generate-exit-jumps exit-conditions/before-loop-body)
                      ,@body
                      ,@(generate-exit-jumps exit-conditions/after-loop-body)))
-              ,next-iteration-label
+              ,label/next-iteration
                 ,@forms/next-iteration
-                (go ,top-label)
-              ,end-label
+                (go ,label/top)
+              ,label/end
                 ,@forms/epilogue))
       (log.debug "Building result form for ~A" *loop-form*)
       `(block ,name

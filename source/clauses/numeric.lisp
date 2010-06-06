@@ -15,7 +15,7 @@
            (variable (register/variable "REPEAT/COUNTER" count)))
       `(progn
          (when (<= ,variable 0)
-           (go ,(end-label-of *loop-form*)))
+           (go ,(label/end-of *loop-form*)))
          (decf ,variable)
          (values)))))
 

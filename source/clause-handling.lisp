@@ -58,7 +58,7 @@
   (bind (((&key has-more-condition &allow-other-keys) (lookup/generator name)))
     `(unless ,has-more-condition
        ;; TODO replace -loop-end- inside returned forms?
-       (go ,(end-label-of *loop-form*)))))
+       (go ,(label/end-of *loop-form*)))))
 
 (def (function e) register/generator (name place stepper stepper-place-order has-more-condition &key (mutable #f)
                                            (type +top-type+) initial-value)

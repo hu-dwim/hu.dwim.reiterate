@@ -38,8 +38,8 @@
             (-with-macro/body-))))
       (-with-macro/body-)))
 
-(def function expand-to-generator-stepper (name)
-  (bind (((&key place stepper has-more-condition variable stepper-place-order &allow-other-keys) (lookup/generator name)))
+(def (function e) expand/generator/stepper (name)
+  (bind (((&key place stepper variable stepper-place-order &allow-other-keys) (lookup/generator name)))
     `(progn
        (unless ,has-more-condition
          ;; TODO replace -loop-end- inside returned forms?

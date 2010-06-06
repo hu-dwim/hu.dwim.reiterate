@@ -12,7 +12,7 @@
     (unless (and (length= 2 -clause-)
                  (typep (second -clause-) 'variable-name))
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
-    (expand-to-generator-stepper (second -clause-))))
+    (expand/generator/stepper (second -clause-))))
 
 (def function register-generator/in-list (name-form the-list mutable?)
   (bind (((:values name type) (extract-variable-name-and-type name-form)))
@@ -35,7 +35,7 @@
   (named-clause-of-kind? for in-list)
   (bind (((name nil the-list &key mutable) (rest -clause-))
          (the-list (-unwalk-form- (-walk-form- the-list))))
-    (expand-to-generator-stepper
+    (expand/generator/stepper
      (register-generator/in-list name the-list mutable))))
 
 (def clause generate/in-list
@@ -69,7 +69,7 @@
   (named-clause-of-kind? for in-vector)
   (bind (((name nil the-vector &key mutable) (rest -clause-))
          (the-vector (-unwalk-form- (-walk-form- the-vector))))
-    (expand-to-generator-stepper
+    (expand/generator/stepper
      (register-generator/in-vector name the-vector mutable))))
 
 (def clause generate/in-vector

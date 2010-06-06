@@ -6,6 +6,7 @@
 
 (in-package :hu.dwim.reiterate)
 
+;; TODO add nconc, append, etc
 (def clause collect
   (clause-of-kind? collect collecting)
   (bind (((value &key in into) (rest -clause-))

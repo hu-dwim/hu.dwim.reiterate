@@ -18,18 +18,6 @@
                (setf (assoc-value (clause-data-of *loop-form*) ,key :test #'equal)
                      (progn ,@value))))))))
 
-(def macro clause-expander/single-named-variable ((variable-name initial-value clause-data-key-name
-                                                                 &key (temporary-variable-name-prefix (string+ (string clause-data-key-name) "/VALUE"))
-                                                                 (result-form-candidate #f))
-                                                   &body body)
-  `(bind (((value &key in into) (rest -clause-)))
-     (with-possibly-different-iteration-context (in :clause -clause-)
-       (bind ((,variable-name (ensure-clause-data (list ,clause-data-key-name into)
-                                (register/variable (or into ,temporary-variable-name-prefix) ,initial-value ,type))))
-         ,(when result-form-candidate
-            `(register/result-form-candidate (list ,clause-data-key-name into) ,variable-name))
-         (maybe-wrap-with-progn (list ,@body))))))
-
 (def with-macro* with-different-iteration-context (position)
   (bind ((*loop-form* (elt *loop-form-stack* position))
          (*loop-form-stack* (subseq *loop-form-stack* position)))

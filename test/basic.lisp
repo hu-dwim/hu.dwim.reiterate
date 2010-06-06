@@ -47,7 +47,10 @@
 (def test test/basic/count ()
   (is (= 10 (eval '(iter (repeat 9.5) (count 1)))))
   (is (= 9  (eval '(iter (repeat 9) (count t)))))
-  (is (= 0  (eval '(iter (repeat -1.5) (counting t))))))
+  (is (= 0  (eval '(iter (repeat -1.5) (counting t)))))
+  (is (= 2  (eval '(iter (for i :in-list '(1 2 3))
+                         (count (oddp i) :into result)
+                         (finally (return result)))))))
 
 (def test test/basic/initially ()
   (is (equal '(42)

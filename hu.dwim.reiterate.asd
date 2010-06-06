@@ -18,7 +18,8 @@
                :hu.dwim.util)
   :components ((:module "source"
                 :components ((:module "clauses"
-                              :components ((:file "sequence")
+                              :components ((:file "numeric")
+                                           (:file "sequence")
                                            (:file "simple"))
                               :depends-on ("clause-handling" "conditions" "package" "variables" "walker"))
                              (:file "conditions" :depends-on ("package" "variables"))

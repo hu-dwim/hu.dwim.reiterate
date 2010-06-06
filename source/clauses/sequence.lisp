@@ -23,12 +23,12 @@
                (stepper `(progn
                            (setq ,variable/previous-cons ,variable/current-cons)
                            (setq ,variable/current-cons (cdr ,variable/current-cons)))))
-          (register/generator name place stepper :stepper-place variable/current-cons
+          (register/generator name place stepper :stepper/place variable/current-cons
                               :mutable mutable? :type type))
         (bind ((variable/current-cons (register/variable "IN-LIST/CURRENT-CONS" the-list))
                (place `(car ,variable/current-cons))
                (stepper `(setq ,variable/current-cons (cdr ,variable/current-cons))))
-          (register/generator name place stepper :place-stepper variable/current-cons
+          (register/generator name place stepper :place/stepper variable/current-cons
                               :mutable mutable? :type type)))))
 
 (def clause for/in-list
@@ -54,14 +54,14 @@
           (register/generator name
                               `(aref ,variable/vector (1- ,variable/index))
                               `(incf ,variable/index)
-                              :stepper-place
+                              :stepper/place
                               `(< ,variable/index ,variable/length)
                               :mutable mutable? :type type))
         (bind ((variable/index   (register/variable "IN-VECTOR/INDEX" 0)))
           (register/generator name
                               `(aref ,variable/vector ,variable/index)
                               `(incf ,variable/index)
-                              :place-stepper
+                              :place/stepper
                               `(< ,variable/index ,variable/length)
                               :mutable mutable? :type type)))))
 

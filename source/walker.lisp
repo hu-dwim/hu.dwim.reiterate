@@ -50,10 +50,12 @@
    (macro-bindings/wrapping '() :initarg nil)
    (symbol-macro-bindings/wrapping '() :initarg nil)
    (top-label (generate-unique-name 'loop-top) :initarg nil)
+   (next-iteration-label (generate-unique-name 'next) :initarg nil)
    (end-label (generate-unique-name 'loop-end) :initarg nil)
    (result-form :initarg nil)
    (result-form-candidates '() :initarg nil)
    (forms/prologue '() :initarg nil)
+   (forms/next-iteration '() :initarg nil)
    (forms/epilogue '() :initarg nil)
    ;; these are not used currently for anything
    (exit-conditions/before-loop-body '() :initarg nil)

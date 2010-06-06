@@ -46,11 +46,11 @@
 
 (def function expand ()
   (assert (layer-active-p 'reiterate))
-  (bind (((:slots name body variable-bindings/wrapping variable-bindings/body top-label end-label
+  (bind (((:slots name body variable-bindings/wrapping variable-bindings/body top-label next-iteration-label end-label
                   result-form-candidates symbol-macro-bindings/wrapping macro-bindings/wrapping
                   function-bindings/wrapping inlined-functions
                   exit-conditions/before-loop-body exit-conditions/after-loop-body
-                  forms/prologue forms/epilogue walk-environment/loop-body) *loop-form*)
+                  forms/prologue forms/next-iteration forms/epilogue walk-environment/loop-body) *loop-form*)
          (expansion nil)
          (result-form nil))
     (log.debug "Processing toplevel iterate form ~S; stack is ~A" *loop-form* *loop-form-stack*)
@@ -84,6 +84,8 @@
                      ,@(generate-exit-jumps exit-conditions/before-loop-body)
                      ,@body
                      ,@(generate-exit-jumps exit-conditions/after-loop-body)))
+              ,next-iteration-label
+                ,@forms/next-iteration
                 (go ,top-label)
               ,end-label
                 ,@forms/epilogue))

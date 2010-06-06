@@ -41,19 +41,28 @@
 (def (function e) expand/generator/stepper (name)
   (bind (((&key place stepper variable stepper-place-order &allow-other-keys) (lookup/generator name)))
     `(progn
-       (unless ,has-more-condition
-         ;; TODO replace -loop-end- inside returned forms?
-         (go ,(end-label-of *loop-form*)))
-       ,@(ecase stepper-place-order
-           (:place-stepper `((prog1
-                                 (setq ,variable ,place)
-                               ,stepper)))
-           (:stepper-place `(,stepper
-                             (setq ,variable ,place)))))))
+       ,(expand/generator/has-more-check name)
+       ,@(bind ((assign-form (if (eq place variable)
+                                 variable
+                                 `(setq ,variable ,place))))
+           (ecase stepper-place-order
+             (:place/stepper
+              `((prog1
+                    ,assign-form
+                  ,stepper)))
+             (:stepper/place
+              `(,stepper
+                ,assign-form)))))))
+
+(def (function e) expand/generator/has-more-check (name)
+  (bind (((&key has-more-condition &allow-other-keys) (lookup/generator name)))
+    `(unless ,has-more-condition
+       ;; TODO replace -loop-end- inside returned forms?
+       (go ,(end-label-of *loop-form*)))))
 
 (def (function e) register/generator (name place stepper stepper-place-order has-more-condition &key (mutable #f)
                                            (type +top-type+))
-  (check-type stepper-place-order (member :stepper-place :place-stepper))
+  (check-type stepper-place-order (member :stepper/place :place/stepper))
   (bind ((variable/value nil))
     (if mutable
         (with-unique-names (new-value)
@@ -61,7 +70,9 @@
           (register/symbol-macro name `(,name))
           (register/function name () `(,(maybe-wrap-with-type-check type place)) :inline #t)
           (register/function `(setf ,name) `(,new-value) `((setf ,place ,(maybe-wrap-with-type-check type new-value))) :inline #t))
-        (setf variable/value (register/variable name nil type)))
+        (setf variable/value (if (consp place)
+                                 (register/variable name nil type)
+                                 place)))
     (setf (assoc-value (generators-of *loop-form*) name)
           (list :place place
                 :type type
@@ -141,17 +152,21 @@
   (setf (assoc-value (result-form-candidates-of *loop-form*) name :test 'equal) value-form))
 
 (def (function e) register/prologue (form)
- (appendf (forms/prologue-of *loop-form*) (list form))
- (values))
+  (appendf (forms/prologue-of *loop-form*) (list form))
+  (values))
+
+(def (function e) register/next-iteration-form (form)
+  (appendf (forms/next-iteration-of *loop-form*) (list form))
+  (values))
 
 (def (function e) register/epilogue (form)
- (appendf (forms/epilogue-of *loop-form*) (list form))
- (values))
+  (appendf (forms/epilogue-of *loop-form*) (list form))
+  (values))
 
 (def definer clause (name match-condition-form expander-form)
   `(macrolet
-       ((named-clause-of-kind? (kind &optional sub-kind)
-          `(funcall 'named-clause-of-kind? -clause- ',kind ',sub-kind))
+       ((named-clause-of-kind? (&rest args)
+          `(funcall 'named-clause-of-kind? -clause- ,@(mapcar (lambda (el) `(quote ,el)) args)))
         (clause-of-kind? (&rest kinds)
           `(or ,@(loop
                    :for kind :in kinds
@@ -179,11 +194,13 @@
 (def function clause-of-kind? (clause kind)
   (equal/clause-name kind (first clause)))
 
-(def function named-clause-of-kind? (clause kind &optional sub-kind)
+(def function named-clause-of-kind? (clause kind &optional sub-kind1 sub-kind2)
   (and (equal/clause-name kind (first clause))
        (extract-variable-name-and-type (second clause) :otherwise #f)
-       (or (null sub-kind)
-           (equal/clause-name sub-kind (third clause)))))
+       (or (null sub-kind1)
+           (equal/clause-name sub-kind1 (third clause)))
+       (or (null sub-kind2)
+           (equal/clause-name sub-kind2 (fifth clause)))))
 
 (def layered-method walk-form/compound :in reiterate :around (name form parent environment)
   (when (boundp '*loop-form*)

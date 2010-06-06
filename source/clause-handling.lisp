@@ -50,12 +50,6 @@
             (-with-macro/body-))))
       (-with-macro/body-)))
 
-(def function maybe-wrap-with-progn (forms)
-  (if (length= 1 forms)
-      (first forms)
-      `(progn
-         ,@forms)))
-
 (def function expand-to-generator-stepper (name)
   (bind (((&key place stepper has-more-condition variable stepper-place-order &allow-other-keys) (lookup/generator name)))
     `(progn
@@ -178,9 +172,6 @@
                             (unwalk-form node)))
                      (declare (ignorable #'-walk-form- #'-unwalk-form-))
                      ,expander-form))))))
-
-(def type variable-name ()
-  `(and symbol (not (member nil t))))
 
 (def function equal/clause-name (a b)
   (or (eq a b)

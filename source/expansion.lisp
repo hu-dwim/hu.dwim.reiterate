@@ -31,6 +31,19 @@
            (*loop-form-stack* (cons *loop-form* *loop-form-stack*)))
       (expand))))
 
+(def function variable-bindings/extract-primitive-bindings (variable-alist)
+  (mapcar (lambda (entry)
+            (bind (((name &key initial-value &allow-other-keys) entry))
+              (list name initial-value)))
+          variable-alist))
+
+(def function variable-bindings/extract-type-declarations (variable-alist)
+  (remove nil (mapcar (lambda (entry)
+                        (bind (((name &key (type +top-type+) &allow-other-keys) entry))
+                          (unless (eql +top-type+ type)
+                            `(type ,type ,name))))
+                      variable-alist)))
+
 (def function expand ()
   (assert (layer-active-p 'reiterate))
   (bind (((:slots name body variable-bindings/wrapping variable-bindings/body top-label end-label
@@ -64,7 +77,8 @@
             `(tagbody
                 ,@forms/prologue
               ,top-label
-                (let* (,@variable-bindings/body)
+                (let* (,@(variable-bindings/extract-primitive-bindings variable-bindings/body))
+                  (declare ,@(variable-bindings/extract-type-declarations variable-bindings/body))
                   ,@(generate-exit-jumps exit-conditions/before-loop-body)
                   ,@body
                   ,@(generate-exit-jumps exit-conditions/after-loop-body))
@@ -73,7 +87,8 @@
                 ,@forms/epilogue))
       (log.debug "Building result form for ~A" *loop-form*)
       `(block ,name
-         (let* (,@variable-bindings/wrapping)
+         (let* (,@(variable-bindings/extract-primitive-bindings variable-bindings/wrapping))
+           (declare ,@(variable-bindings/extract-type-declarations variable-bindings/wrapping))
            (macrolet (,@macro-bindings/wrapping)
              (flet (,@function-bindings/wrapping)
                (declare (inline ,@inlined-functions))

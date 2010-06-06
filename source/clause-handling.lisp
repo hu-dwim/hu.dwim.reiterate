@@ -63,18 +63,20 @@
            (:stepper-place `(,stepper
                              (setq ,variable ,place)))))))
 
-(def (function e) register/generator (name place stepper stepper-place-order has-more-condition &key (mutable #f))
+(def (function e) register/generator (name place stepper stepper-place-order has-more-condition &key (mutable #f)
+                                           (type +top-type+))
   (check-type stepper-place-order (member :stepper-place :place-stepper))
   (bind ((variable/value nil))
     (if mutable
         (with-unique-names (new-value)
           (setf variable/value (register/variable* (string name) :scope :wrapping))
           (register/symbol-macro name `(,name))
-          (register/function name () (list place) :inline #t)
-          (register/function `(setf ,name) `(,new-value) `((setf ,place ,new-value)) :inline #t))
-        (setf variable/value (register/variable name)))
+          (register/function name () `(,(maybe-wrap-with-type-check type place)) :inline #t)
+          (register/function `(setf ,name) `(,new-value) `((setf ,place ,(maybe-wrap-with-type-check type new-value))) :inline #t))
+        (setf variable/value (register/variable name nil type)))
     (setf (assoc-value (generators-of *loop-form*) name)
           (list :place place
+                :type type
                 :stepper stepper
                 :stepper-place-order stepper-place-order
                 :has-more-condition has-more-condition
@@ -88,17 +90,17 @@
       (iterate-compile-error "Could not find generator ~S" name))
     generator))
 
-(def (function e) register/variable (name &optional (initial-value nil))
-  (register/variable* name :initial-value initial-value))
+(def (function e) register/variable (name &optional (initial-value nil) (type +top-type+))
+  (register/variable* name :initial-value initial-value :type type))
 
-(def (function e) register/variable* (name &key (initial-value nil) (scope :wrapping))
+(def (function e) register/variable* (name &key (type +top-type+) (initial-value nil) (scope :wrapping))
   (bind (((:slots walk-environment/loop-body) *loop-form*)
          (storage-slot-name (ecase scope
                               (:wrapping 'variable-bindings/wrapping)
                               (:body 'variable-bindings/loop-body))))
     (when (stringp name)
       (setf name (generate-unique-name name)))
-    (appendf (slot-value *loop-form* storage-slot-name) `((,name ,initial-value)))
+    (appendf (slot-value *loop-form* storage-slot-name) `((,name :initial-value ,initial-value :type ,type)))
     (walk-environment/augment! walk-environment/loop-body :variable name)
     (log.debug "Augmented environment with variable ~S in the context of ~A: ~A" name *loop-form* walk-environment/loop-body)
     name))
@@ -185,7 +187,7 @@
 
 (def function named-clause-of-kind? (clause kind &optional sub-kind)
   (and (equal/clause-name kind (first clause))
-       (typep (second clause) 'variable-name)
+       (extract-variable-name-and-type (second clause) :otherwise #f)
        (or (null sub-kind)
            (equal/clause-name sub-kind (third clause)))))
 

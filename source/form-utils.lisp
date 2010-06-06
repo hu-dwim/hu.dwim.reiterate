@@ -9,7 +9,7 @@
 (def type variable-name ()
   `(and symbol (not (member nil t))))
 
-(def function extract-variable-name-and-type (name-form &key (otherwise :error otherwise?))
+(def function extract-variable-name-and-type (name-form &key (otherwise :error otherwise?) (default-type +top-type+))
   (etypecase name-form
     (cons
      (if (and (eq 'the (first name-form))
@@ -19,7 +19,7 @@
          (handle-otherwise
            (iterate-compile-error "Expecting a variable name, possibly inside a ~S form specifying its type, but found ~S" 'the name-form))))
     (variable-name
-     (values name-form +top-type+))))
+     (values name-form default-type))))
 
 (def function maybe-wrap-with-progn (forms)
   (if (length= 1 forms)

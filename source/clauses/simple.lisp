@@ -33,6 +33,12 @@
   (clause-of-kind? finally)
   (register/epilogue (maybe-wrap-with-progn (rest -clause-))))
 
+(def clause next-iteration
+  (clause-of-kind? next-iteration)
+  (bind (((&key in) (rest -clause-)))
+    (with-possibly-different-iteration-context (in :clause -clause-)
+      `(go ,(label/next-iteration-of *loop-form*)))))
+
 (def clause first-time?
   (clause-of-kind? first-time?)
   (bind (((&key in) (rest -clause-)))

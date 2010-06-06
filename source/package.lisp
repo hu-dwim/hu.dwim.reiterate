@@ -25,6 +25,7 @@
            #:collecting
            #:initially
            #:finally
+           #:next-iteration
            #:first-time?
            #:count
            #:countint

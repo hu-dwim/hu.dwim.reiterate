@@ -82,7 +82,7 @@
   (register/variable* name :initial-value initial-value :type type))
 
 (def (function e) register/variable* (name &key (type +top-type+) (initial-value nil) (scope :wrapping))
-  (bind (((:slots walk-environment/loop-body) *loop-form*)
+  (bind (((:slots walk-environment/loop-body walk-environment/current) *loop-form*)
          (storage-slot-name (ecase scope
                               (:wrapping 'variable-bindings/wrapping)
                               (:body 'variable-bindings/loop-body))))
@@ -90,38 +90,44 @@
       (setf name (generate-unique-name name)))
     (appendf (slot-value *loop-form* storage-slot-name) `((,name :initial-value ,initial-value :type ,type)))
     (walk-environment/augment! walk-environment/loop-body :variable name)
-    (log.debug "Augmented environment with variable ~S in the context of ~A: ~A" name *loop-form* walk-environment/loop-body)
+    (walk-environment/augment! walk-environment/current :variable name)
+    (log.debug "Augmented environment with variable ~S in the context of ~A" name *loop-form*)
+    ;; (log.debug "WALK-ENVIRONMENT/LOOP-BODY is ~A" walk-environment/loop-body)
+    ;; (log.debug "WALK-ENVIRONMENT/CURRENT is ~A" walk-environment/current)
     name))
 
 (def (function e) register/function (name args body &key inline)
   (when inline
     (pushnew name (inlined-functions-of *loop-form*)))
-  (bind (((:slots walk-environment/loop-body) *loop-form*))
+  (bind (((:slots walk-environment/loop-body walk-environment/current) *loop-form*))
     (when (stringp name)
       (setf name (generate-unique-name name)))
     (appendf (function-bindings/wrapping-of *loop-form*) `((,name ,args ,@body)))
     (walk-environment/augment! walk-environment/loop-body :function name)
-    (log.debug "Augmented environment with function ~S in the context of ~A: ~A" name *loop-form* walk-environment/loop-body)
+    (walk-environment/augment! walk-environment/current :function name)
+    (log.debug "Augmented environment with function ~S in the context of ~A" name *loop-form*)
     name))
 
 (def (function e) register/macro (name args body)
-  (bind (((:slots walk-environment/enclosing walk-environment/loop-body) *loop-form*))
+  (bind (((:slots walk-environment/enclosing walk-environment/loop-body walk-environment/current) *loop-form*))
     (when (stringp name)
       (setf name (generate-unique-name name)))
     (appendf (macro-bindings/wrapping-of *loop-form*) `((,name ,args ,@body)))
-    (walk-environment/augment! walk-environment/loop-body :macro name
-                               (hu.dwim.walker::parse-macro-definition name args body
-                                                                       (walk-environment/lexical-environment walk-environment/enclosing)))
-    (log.debug "Augmented environment with macro ~S in the context of ~A: ~A" name *loop-form* walk-environment/loop-body)
+    (bind ((parsed-macro (hu.dwim.walker::parse-macro-definition name args body
+                                                                 (walk-environment/lexical-environment walk-environment/enclosing))))
+      (walk-environment/augment! walk-environment/loop-body :macro name parsed-macro)
+      (walk-environment/augment! walk-environment/current :macro name parsed-macro))
+    (log.debug "Augmented environment with macro ~S in the context of ~A" name *loop-form*)
     name))
 
 (def (function e) register/symbol-macro (name expansion)
-  (bind (((:slots walk-environment/loop-body) *loop-form*))
+  (bind (((:slots walk-environment/loop-body walk-environment/current) *loop-form*))
     (when (stringp name)
       (setf name (generate-unique-name name)))
     (appendf (symbol-macro-bindings/wrapping-of *loop-form*) `((,name ,expansion)))
     (walk-environment/augment! walk-environment/loop-body :symbol-macro name expansion)
-    (log.debug "Augmented environment with symbol-macro ~S in the context of ~A: ~A" name *loop-form* walk-environment/loop-body)
+    (walk-environment/augment! walk-environment/current :symbol-macro name expansion)
+    (log.debug "Augmented environment with symbol-macro ~S in the context of ~A" name *loop-form*)
     name))
 
 (def (function e) register/result-form (result-form)
@@ -154,7 +160,7 @@
            (list (named-lambda clause-matcher (-clause-)
                    ,match-condition-form)
                  (named-lambda clause-expander (-clause-)
-                   (flet ((-walk-form- (node &optional (parent *loop-form*) (environment (walk-environment/loop-body-of *loop-form*)))
+                   (flet ((-walk-form- (node &optional (parent *loop-form*) (environment (walk-environment/current-of *loop-form*)))
                             (check-type parent walked-form)
                             (log.debug "Will walk ~S in context ~A" node *loop-form*)
                             (walk-form node :parent parent :environment environment))
@@ -180,6 +186,8 @@
            (equal/clause-name sub-kind (third clause)))))
 
 (def layered-method walk-form/compound :in reiterate :around (name form parent environment)
+  (when (boundp '*loop-form*)
+    (setf (walk-environment/current-of *loop-form*) environment))
   (flet ((loop-stack-position (form)
            ;; finds the first loop-form on the stack that owns this form
            (if (boundp '*loop-form-stack*)

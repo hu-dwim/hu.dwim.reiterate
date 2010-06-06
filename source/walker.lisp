@@ -40,6 +40,7 @@
    (body-conses (make-hash-table :test #'eq))
    (walk-environment/enclosing)
    (walk-environment/loop-body)
+   (walk-environment/current :documentation "Contains the currnet walk-environment while descending down on the body forms.")
    (clause-data '() :initarg nil)
    (generators '() :initarg nil)
    (variable-bindings/wrapping '() :initarg nil)

@@ -57,6 +57,21 @@
                                         (for i :in-list '(1 2 3))
                                         (collect i :in level1)))))))))
 
+(def test test/nesting/next-iteration ()
+  (is (equal '(A A 1 2 A 1 2 B B 1 2 B 1 2 C C 1 2 C 1 2)
+             (eval '(iter level1
+                          (for i :in-list '(a b c))
+                          (progn
+                            (collect i)
+                            (iter level2
+                                  (repeat 2)
+                                  (collect i :in level1)
+                                  (iter level3
+                                        (for i :in-list '(1 2 3))
+                                        (collect i :in level1)
+                                        (when (evenp i)
+                                          (next-iteration :in level2))))))))))
+
 (def test test/nesting/5 ()
   (is (equal '(a 42 b 42 c 42)
              (eval '(iter named outer

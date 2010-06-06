@@ -94,7 +94,7 @@
              (eval '(iter (for i :in-list '(a b c))
                           (for j :in-list '(x y))
                           (collect i)
-                          (collect j)))))
+                          (collecting j)))))
   (is (equal '(1 2)
              (eval '(iter outer
                           (repeat 1)

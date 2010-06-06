@@ -61,7 +61,7 @@
        (go ,(end-label-of *loop-form*)))))
 
 (def (function e) register/generator (name place stepper stepper-place-order has-more-condition &key (mutable #f)
-                                           (type +top-type+))
+                                           (type +top-type+) initial-value)
   (check-type stepper-place-order (member :stepper/place :place/stepper))
   (bind ((variable/value nil))
     (if mutable
@@ -71,7 +71,7 @@
           (register/function name () `(,(maybe-wrap-with-type-check type place)) :inline #t)
           (register/function `(setf ,name) `(,new-value) `((setf ,place ,(maybe-wrap-with-type-check type new-value))) :inline #t))
         (setf variable/value (if (consp place)
-                                 (register/variable name nil type)
+                                 (register/variable name initial-value type)
                                  place)))
     (setf (assoc-value (generators-of *loop-form*) name)
           (list :place place

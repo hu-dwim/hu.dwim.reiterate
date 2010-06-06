@@ -17,4 +17,6 @@
                              (:file "basic" :depends-on ("suite"))
                              (:file "lexenv" :depends-on ("suite"))
                              (:file "nesting" :depends-on ("suite"))
-                             (:file "suite" :depends-on ("package"))))))
+                             (:file "numeric" :depends-on ("suite"))
+                             (:file "suite" :depends-on ("package"))
+                             (:file "types" :depends-on ("suite"))))))

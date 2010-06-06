@@ -163,26 +163,27 @@
   (appendf (forms/epilogue-of *loop-form*) (list form))
   (values))
 
-(def definer clause (name match-condition-form expander-form)
-  `(macrolet
-       ((named-clause-of-kind? (&rest args)
-          `(funcall 'named-clause-of-kind? -clause- ,@(mapcar (lambda (el) `(quote ,el)) args)))
-        (clause-of-kind? (&rest kinds)
-          `(or ,@(loop
-                   :for kind :in kinds
-                   :collect `(funcall 'clause-of-kind? -clause- ',kind)))))
-     (setf (find-clause-handler ',name)
-           (list (named-lambda clause-matcher (-clause-)
-                   ,match-condition-form)
-                 (named-lambda clause-expander (-clause-)
-                   (flet ((-walk-form- (node &optional (parent *loop-form*) (environment (walk-environment/current-of *loop-form*)))
-                            (check-type parent walked-form)
-                            (log.debug "Will walk ~S in context ~A" node *loop-form*)
-                            (walk-form node :parent parent :environment environment))
-                          (-unwalk-form- (node)
-                            (unwalk-form node)))
-                     (declare (ignorable #'-walk-form- #'-unwalk-form-))
-                     ,expander-form))))))
+(def (definer :available-flags "e") clause (name match-condition-form expander-form)
+  (with-standard-definer-options name
+    `(macrolet
+         ((named-clause-of-kind? (&rest args)
+            `(funcall 'named-clause-of-kind? -clause- ,@(mapcar (lambda (el) `(quote ,el)) args)))
+          (clause-of-kind? (&rest kinds)
+            `(or ,@(loop
+                     :for kind :in kinds
+                     :collect `(funcall 'clause-of-kind? -clause- ',kind)))))
+       (setf (find-clause-handler ',name)
+             (list (named-lambda clause-matcher (-clause-)
+                     ,match-condition-form)
+                   (named-lambda clause-expander (-clause-)
+                     (flet ((-walk-form- (node &optional (parent *loop-form*) (environment (walk-environment/current-of *loop-form*)))
+                              (check-type parent walked-form)
+                              (log.debug "Will walk ~S in context ~A" node *loop-form*)
+                              (walk-form node :parent parent :environment environment))
+                            (-unwalk-form- (node)
+                              (unwalk-form node)))
+                       (declare (ignorable #'-walk-form- #'-unwalk-form-))
+                       ,expander-form)))))))
 
 (def function equal/clause-name (a b)
   (or (eq a b)

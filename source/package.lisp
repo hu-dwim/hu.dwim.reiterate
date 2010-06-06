@@ -18,9 +18,6 @@
         :hu.dwim.util
         :metabang-bind)
   (:export #:for
-           #:in
-           #:in-list
-           #:in-vector
            #:next
            #:generate
            #:repeat
@@ -32,8 +29,7 @@
            #:count
            #:countint
            #:sum
-           #:summing
-           #:in-list)
+           #:summing)
   (:shadowing-import-from :closer-mop
                           #:defgeneric
                           #:defmethod

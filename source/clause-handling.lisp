@@ -25,7 +25,7 @@
   `(bind (((value &key in into) (rest -clause-)))
      (with-possibly-different-iteration-context (in :clause -clause-)
        (bind ((,variable-name (ensure-clause-data (list ,clause-data-key-name into)
-                                (or into (register/variable ,temporary-variable-name-prefix ,initial-value)))))
+                                (register/variable (or into ,temporary-variable-name-prefix) ,initial-value ,type))))
          ,(when result-form-candidate
             `(register/result-form-candidate (list ,clause-data-key-name into) ,variable-name))
          (maybe-wrap-with-progn (list ,@body))))))

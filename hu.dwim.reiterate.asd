@@ -20,7 +20,8 @@
                 :components ((:module "clauses"
                               :components ((:file "numeric")
                                            (:file "sequence")
-                                           (:file "simple"))
+                                           (:file "simple")
+                                           (:file "collecting"))
                               :depends-on ("clause-handling" "conditions" "package" "variables" "walker"))
                              (:file "conditions" :depends-on ("package" "variables"))
                              (:file "clause-handling" :depends-on ("conditions" "form-utils" "package" "variables" "walker"))

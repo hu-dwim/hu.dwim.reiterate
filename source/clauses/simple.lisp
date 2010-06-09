@@ -6,26 +6,6 @@
 
 (in-package :hu.dwim.reiterate)
 
-;; TODO add nconc, append, etc
-(def clause collect
-  (clause-of-kind? collect collecting)
-  (bind (((value &key in into) (rest -clause-))
-         (value (-unwalk-form- (-walk-form- value))))
-    (with-possibly-different-iteration-context (in :clause -clause-)
-      (bind (((variable/head variable/last-cons) (ensure-clause-data (list 'collecting into)
-                                                   (list (register/variable (or into "COLLECTING/HEAD") nil)
-                                                         (register/variable "COLLECTING/LAST-CONS" nil)))))
-        (register/result-form-candidate (list :collect into) variable/head)
-        (with-unique-names (value-tmp cons-tmp)
-          `(let ((,value-tmp ,value))
-             (if ,variable/head
-                 (let ((,cons-tmp (cons ,value-tmp nil)))
-                   (setf (cdr ,variable/last-cons) ,cons-tmp)
-                   (setq ,variable/last-cons ,cons-tmp))
-                 (progn
-                   (setq ,variable/last-cons (cons ,value-tmp nil))
-                   (setq ,variable/head ,variable/last-cons)))))))))
-
 (def clause initially
   (clause-of-kind? initially)
   (register/prologue (maybe-wrap-with-progn (rest -clause-))))

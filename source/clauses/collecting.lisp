@@ -16,27 +16,39 @@
     (with-unique-names (value)
       `(let ((,value ,value-form))
          ,(ecase kind
-             (collect
-               `(setq ,variable/last-cons (if ,variable/head
-                                              (setf (cdr ,variable/last-cons) (cons ,value nil))
-                                              (setq ,variable/head (cons ,value nil)))))
-             (append
-               `(progn
-                  (setq ,value (copy-list ,value))
-                  (setq ,variable/last-cons (last (if ,variable/head
-                                                      (setf (cdr ,variable/last-cons) ,value)
-                                                      (setq ,variable/head ,value)))))))))))
+            (collecting
+              `(setq ,variable/last-cons (if ,variable/head
+                                             (setf (cdr ,variable/last-cons) (cons ,value nil))
+                                             (setq ,variable/head (cons ,value nil)))))
+            (appending
+              `(when ,value
+                 (setq ,value (copy-list ,value))
+                 (setq ,variable/last-cons (last (if ,variable/head
+                                                     (setf (cdr ,variable/last-cons) ,value)
+                                                     (setq ,variable/head ,value))))))
+            (nconcing
+              `(when ,value
+                 (setq ,variable/last-cons (last (if ,variable/head
+                                                     (setf (cdr ,variable/last-cons) ,value)
+                                                     (setq ,variable/head ,value)))))))))))
 
 (def clause collecting
   (clause-of-kind? collecting)
   (bind (((value &key in into) (rest -clause-))
          (value (-unwalk-form- (-walk-form- value))))
     (with-possibly-different-iteration-context (in :clause -clause-)
-      (expand/collector into value 'collect))))
+      (expand/collector into value 'collecting))))
 
 (def clause appending
   (clause-of-kind? appending)
   (bind (((value &key in into) (rest -clause-))
          (value (-unwalk-form- (-walk-form- value))))
     (with-possibly-different-iteration-context (in :clause -clause-)
-      (expand/collector into value 'append))))
+      (expand/collector into value 'appending))))
+
+(def clause nconcing
+  (clause-of-kind? nconcing)
+  (bind (((value &key in into) (rest -clause-))
+         (value (-unwalk-form- (-walk-form- value))))
+    (with-possibly-different-iteration-context (in :clause -clause-)
+      (expand/collector into value 'nconcing))))

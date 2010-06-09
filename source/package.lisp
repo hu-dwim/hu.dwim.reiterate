@@ -27,6 +27,8 @@
            #:first-iteration?
            #:first-time?
            #:collecting
+           #:appending
+           #:nconcing
            #:counting
            #:summing)
   (:shadowing-import-from :closer-mop

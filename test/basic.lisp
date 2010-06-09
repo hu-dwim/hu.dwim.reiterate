@@ -42,10 +42,18 @@
              (eval '(iter (for i :in-list '(1 2 3))
                           (collecting i)
                           (collecting i)))))
+  (is (equal '(3 2 1 1 2 3)
+             (eval '(iter (for i :in-list '(1 2 3))
+                          (collecting i :at :start)
+                          (collecting i))))))
+
+(def test test/basic/appending ()
   (is (equal '((A) A (B B) B B (C) C)
              (eval '(iter (for x :in-list '((a) (b b) (c)))
                           (collecting x)
-                          (appending x)))))
+                          (appending x))))))
+
+(def test test/basic/nconcing ()
   (bind ((l1 (list 'a))
          (l2 (list 'b 'b))
          (l3 (list 'c 'c 'c))
@@ -57,6 +65,16 @@
     (is (eq result l1))
     (is (eq (nthcdr 1 result) l2))
     (is (eq (nthcdr 3 result) l3))))
+
+(def test test/basic/unioning ()
+  (is (equal '(A A B C)
+             (eval '(iter (for x :in-list '((a a) (b a) (c b a)))
+                          (unioning x))))))
+
+(def test test/basic/adjoining ()
+  (is (equal '("ab" "abc")
+             (eval '(iter (for el :in-list '("ab" "aB" "abc" "AB"))
+                          (adjoining el :test #'string-equal))))))
 
 (def test test/basic/scoping ()
   (is (= 6 (eval '(let ((foo '(1 2 3)))

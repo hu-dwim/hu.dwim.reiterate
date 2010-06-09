@@ -19,6 +19,7 @@
         :hu.dwim.walker
         :hu.dwim.util
         :metabang-bind)
+  (:shadow #:test)
   (:readtable-setup (setup-readtable/same-as-package :hu.dwim.reiterate)))
 
 (in-package :hu.dwim.reiterate.test)

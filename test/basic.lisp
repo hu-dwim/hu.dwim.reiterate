@@ -41,7 +41,11 @@
   (is (equal '(1 1 2 2 3 3)
              (eval '(iter (for i :in-list '(1 2 3))
                           (collecting i)
-                          (collecting i))))))
+                          (collecting i)))))
+  (is (equal '((A) A (B B) B B (C) C)
+             (eval '(iter (for x :in-list '((a) (b b) (c)))
+                          (collecting x)
+                          (appending x))))))
 
 (def test test/basic/scoping ()
   (is (= 6 (eval '(let ((foo '(1 2 3)))

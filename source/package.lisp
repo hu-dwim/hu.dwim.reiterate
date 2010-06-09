@@ -29,6 +29,8 @@
            #:collecting
            #:appending
            #:nconcing
+           #:adjoining
+           #:unioning
            #:counting
            #:summing)
   (:shadowing-import-from :closer-mop

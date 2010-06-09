@@ -94,6 +94,11 @@
                                            (collect ","))
                                          (collect "x"))))))))
 
+(def test test/basic/first-iteration? ()
+  (is (equal '(t nil nil)
+             (eval '(iter (repeat 3)
+                          (collect (first-iteration?)))))))
+
 (def test test/basic/for/in-list ()
   (is (equal '(a x b y)
              (eval '(iter (for i :in-list '(a b c))

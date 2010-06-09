@@ -18,18 +18,15 @@
         :hu.dwim.util
         :metabang-bind)
   (:export #:for
-           #:next
            #:generate
+           #:next
            #:repeat
-           #:collect
-           #:collecting
            #:initially
            #:finally
            #:next-iteration
            #:first-time?
-           #:count
-           #:countint
-           #:sum
+           #:collecting
+           #:counting
            #:summing)
   (:shadowing-import-from :closer-mop
                           #:defgeneric

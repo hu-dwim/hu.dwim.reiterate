@@ -44,7 +44,7 @@
    (clause-data '() :initarg nil)
    (generators '() :initarg nil)
    (variable-bindings/wrapping '() :initarg nil)
-   (variable-bindings/body '() :initarg nil)
+   (variable-bindings/loop-body '() :initarg nil)
    (function-bindings/wrapping '() :initarg nil)
    (inlined-functions '() :initarg nil)
    (macro-bindings/wrapping '() :initarg nil)

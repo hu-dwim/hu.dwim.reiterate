@@ -66,7 +66,7 @@
   (bind ((variable/value nil))
     (if mutable
         (with-unique-names (new-value)
-          (setf variable/value (register/variable* (string name) :scope :wrapping))
+          (setf variable/value (register/variable (string name)))
           (register/symbol-macro name `(,name))
           (register/function name () `(,(maybe-wrap-with-type-check type place)) :inline #t)
           (register/function `(setf ,name) `(,new-value) `((setf ,place ,(maybe-wrap-with-type-check type new-value))) :inline #t))

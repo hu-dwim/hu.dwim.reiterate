@@ -46,7 +46,7 @@
 
 (def function expand ()
   (assert (layer-active-p 'reiterate))
-  (bind (((:slots name body variable-bindings/wrapping variable-bindings/body label/top label/next-iteration label/end
+  (bind (((:slots name body variable-bindings/wrapping variable-bindings/loop-body label/top label/next-iteration label/end
                   result-form-candidates symbol-macro-bindings/wrapping macro-bindings/wrapping
                   function-bindings/wrapping inlined-functions
                   exit-conditions/before-loop-body exit-conditions/after-loop-body
@@ -77,7 +77,7 @@
             `(tagbody
                 ,@forms/prologue
               ,label/top
-                ,(maybe-wrap-with-bindings (let* variable-bindings/body
+                ,(maybe-wrap-with-bindings (let* variable-bindings/loop-body
                                                 :binding-extractor 'variable-bindings/extract-primitive-bindings
                                                 :declaration-extractor 'variable-bindings/extract-type-declarations)
                   `(progn

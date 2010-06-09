@@ -52,8 +52,9 @@
                                                                     `(length ,variable/vector))))
          (variable/index (register/variable "IN-VECTOR/INDEX" start)))
     (if mutable?
+        ;; mutable iterators need to keep the previous index so that they can provide a place that
+        ;; points to the current value after they have been stepped to the next.
         (bind ((variable/previous-index (register/variable "IN-VECTOR/PREVIOUS-INDEX" start)))
-          ;; mutable iterators are pointing to the next element, so we need a previous variable
           (register/generator name
                               `(aref ,variable/vector ,variable/previous-index)
                               `(progn

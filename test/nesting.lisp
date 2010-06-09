@@ -20,8 +20,8 @@
                                            (repeat 2)
                                            ,@body)))
                          (wrapper
-                          ;; this collect should collect into OUTER
-                          (collect i)))))))))
+                          ;; this collecting should collect into OUTER
+                          (collecting i)))))))))
 
 (def test test/nesting/2 ()
   (is (equal '(a a b b c c)
@@ -32,8 +32,8 @@
                      (iter named outer
                            (for i :in-list '(a b c))
                            (wrapper
-                            ;; this collect should collect into OUTER
-                            (collect i))))))))
+                            ;; this collecting should collect into OUTER
+                            (collecting i))))))))
 
 (def test test/nesting/3 ()
   (is (equal '(a a a b b b c c c)
@@ -42,33 +42,33 @@
                           (progn
                             (iter inner
                                   (repeat 3)
-                                  (collect i :in outer))))))))
+                                  (collecting i :in outer))))))))
 
 (def test test/nesting/4 ()
   (is (equal '(A A 1 2 3 A 1 2 3 B B 1 2 3 B 1 2 3 C C 1 2 3 C 1 2 3)
              (eval '(iter level1
                           (for i :in-list '(a b c))
                           (progn
-                            (collect i)
+                            (collecting i)
                             (iter level2
                                   (repeat 2)
-                                  (collect i :in level1)
+                                  (collecting i :in level1)
                                   (iter level3
                                         (for i :in-list '(1 2 3))
-                                        (collect i :in level1)))))))))
+                                        (collecting i :in level1)))))))))
 
 (def test test/nesting/next-iteration ()
   (is (equal '(A A 1 2 A 1 2 B B 1 2 B 1 2 C C 1 2 C 1 2)
              (eval '(iter level1
                           (for i :in-list '(a b c))
                           (progn
-                            (collect i)
+                            (collecting i)
                             (iter level2
                                   (repeat 2)
-                                  (collect i :in level1)
+                                  (collecting i :in level1)
                                   (iter level3
                                         (for i :in-list '(1 2 3))
-                                        (collect i :in level1)
+                                        (collecting i :in level1)
                                         (when (evenp i)
                                           (next-iteration :in level2))))))))))
 
@@ -78,7 +78,7 @@
                           (for i :in-list '(a b c))
                           (macrolet ((wrapper (&body body)
                                        `(progn
-                                          (collect i)
+                                          (collecting i)
                                           ,@body)))
                             (wrapper
-                             (collect 42))))))))
+                             (collecting 42))))))))

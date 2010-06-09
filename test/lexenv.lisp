@@ -43,17 +43,17 @@
       (is (equal '(0 1 2)
                  (eval '(iter (progn
                                 (for foo :from 0 :to 2)
-                                (collect foo)))))))
+                                (collecting foo)))))))
     (is (equal '(0 1 2)
                (eval '(iter (for foo :from 0 :to 2)
-                            (collect foo)))))))
+                            (collecting foo)))))))
 
 (def test test/lexenv/clauses-dont-hide-current ()
   (not-signals warning
     (is (equal '(42 42 42)
                (eval '(iter (symbol-macrolet ((i 42))
                               (for i :from 0 :to 2)
-                              (collect i))))))))
+                              (collecting i))))))))
 
 (def test test/lexenv/clauses-are-walking-in-proper-env ()
   (not-signals warning

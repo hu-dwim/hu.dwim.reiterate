@@ -24,6 +24,7 @@
            #:initially
            #:finally
            #:next-iteration
+           #:first-iteration?
            #:first-time?
            #:collecting
            #:counting

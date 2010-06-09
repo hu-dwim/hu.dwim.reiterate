@@ -48,3 +48,13 @@
         `(prog1
              ,variable/flag
            (setq ,variable/flag #f))))))
+
+(def clause first-iteration?
+  (clause-of-kind? first-iteration?)
+  (bind (((&key in) (rest -clause-)))
+    (with-possibly-different-iteration-context (in :clause -clause-)
+      (bind ((variable (ensure-clause-data 'first-iteration?
+                         (bind ((variable (register/variable "FIRST-ITERATION?" #t)))
+                           (register/next-iteration-form `(setf ,variable #f))
+                           variable))))
+        variable))))

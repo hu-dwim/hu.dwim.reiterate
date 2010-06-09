@@ -45,36 +45,48 @@
     (register-generator/in-list name the-list mutable initially)
     (values)))
 
-(def function register-generator/in-vector (name-form the-vector mutable? initial-value)
+(def function register-generator/in-vector (name-form the-vector mutable? initial-value start end step)
   (bind (((:values name type) (extract-variable-name-and-type name-form))
-         (variable/vector  (register/variable "IN-VECTOR/VECTOR" the-vector))
-         (variable/length  (register/variable "IN-VECTOR/LENGTH" `(length ,variable/vector))))
+         (variable/vector (register/variable "IN-VECTOR/VECTOR" the-vector))
+         (variable/length (register/variable "IN-VECTOR/LENGTH" (or end
+                                                                    `(length ,variable/vector))))
+         (variable/index (register/variable "IN-VECTOR/INDEX" start)))
     (if mutable?
-        (bind ((variable/index   (register/variable "IN-VECTOR/INDEX" 0)))
+        (bind ((variable/previous-index (register/variable "IN-VECTOR/PREVIOUS-INDEX" start)))
+          ;; mutable iterators are pointing to the next element, so we need a previous variable
           (register/generator name
-                              `(aref ,variable/vector (1- ,variable/index))
-                              `(incf ,variable/index)
+                              `(aref ,variable/vector ,variable/previous-index)
+                              `(progn
+                                 (setf ,variable/previous-index ,variable/index)
+                                 (incf ,variable/index ,step))
                               :stepper/place
                               `(< ,variable/index ,variable/length)
                               :mutable mutable? :type type :initial-value initial-value))
-        (bind ((variable/index   (register/variable "IN-VECTOR/INDEX" 0)))
-          (register/generator name
-                              `(aref ,variable/vector ,variable/index)
-                              `(incf ,variable/index)
-                              :place/stepper
-                              `(< ,variable/index ,variable/length)
-                              :mutable mutable? :type type :initial-value initial-value)))))
+        (register/generator name
+                            `(aref ,variable/vector ,variable/index)
+                            `(incf ,variable/index ,step)
+                            :place/stepper
+                            `(< ,variable/index ,variable/length)
+                            :mutable mutable? :type type :initial-value initial-value))))
 
 (def clause for/in-vector
   (named-clause-of-kind? for in-vector)
-  (bind (((name nil the-vector &key mutable initially) (rest -clause-))
+  (bind (((name nil the-vector &key mutable initially (start 0) end (step 1)) (rest -clause-))
          (the-vector (-unwalk-form- (-walk-form- the-vector))))
     (expand/generator/stepper
-     (register-generator/in-vector name the-vector mutable initially))))
+     (register-generator/in-vector name the-vector mutable
+                                   (-unwalk-form- (-walk-form- initially))
+                                   (-unwalk-form- (-walk-form- start))
+                                   (-unwalk-form- (-walk-form- end))
+                                   (-unwalk-form- (-walk-form- step))))))
 
 (def clause generate/in-vector
   (named-clause-of-kind? generate in-vector)
-  (bind (((name nil the-vector &key mutable initially) (rest -clause-))
+  (bind (((name nil the-vector &key mutable initially (start 0) end (step 1)) (rest -clause-))
          (the-vector (-unwalk-form- (-walk-form- the-vector))))
-    (register-generator/in-vector name the-vector mutable initially)
+    (register-generator/in-vector name the-vector mutable
+                                  (-unwalk-form- (-walk-form- initially))
+                                  (-unwalk-form- (-walk-form- start))
+                                  (-unwalk-form- (-walk-form- end))
+                                  (-unwalk-form- (-walk-form- step)))
     (values)))

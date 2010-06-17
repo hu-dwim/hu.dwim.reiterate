@@ -12,7 +12,7 @@
 
 (def clause finally
   (clause-of-kind? finally)
-  (register/epilogue (maybe-wrap-with-progn (rest -clause-))))
+  (register/epilogue (-unwalk-form- (-walk-form- (maybe-wrap-with-progn (rest -clause-))))))
 
 (def clause next-iteration
   (clause-of-kind? next-iteration)

@@ -20,6 +20,18 @@
     (with-possibly-different-iteration-context (in :clause -clause-)
       `(go ,(label/next-iteration-of *loop-form*)))))
 
+(def clause while
+  (clause-of-kind? while)
+  (bind (((condition &key in) (rest -clause-)))
+    (with-possibly-different-iteration-context (in :clause -clause-)
+      (expand/quit-loop-when `(not ,(-unwalk-form- (-walk-form- condition)))))))
+
+(def clause until
+  (clause-of-kind? until)
+  (bind (((condition &key in) (rest -clause-)))
+    (with-possibly-different-iteration-context (in :clause -clause-)
+      (expand/quit-loop-when (-unwalk-form- (-walk-form- condition))))))
+
 (def clause first-time?
   (clause-of-kind? first-time?)
   (bind (((&key in) (rest -clause-)))

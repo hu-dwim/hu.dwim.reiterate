@@ -45,6 +45,22 @@
   (is (equal '(3 2 1 1 2 3)
              (eval '(iter (for i :in-list '(1 2 3))
                           (collecting i :at :start)
+                          (collecting i)))))
+  (is (equal '(A B 42)
+             (eval '(iter (for el :in-vector #(a b))
+                          (collecting el)
+                          (finally (collecting 42)))))))
+
+(def test test/basic/while ()
+  (is (equal '(2 3 4)
+             (eval '(iter (for i :from 2 :to 10)
+                          (while (< i 5))
+                          (collecting i))))))
+
+(def test test/basic/until ()
+  (is (equal '(2 3 4 5)
+             (eval '(iter (for i :from 2 :to 10)
+                          (until (> i 5))
                           (collecting i))))))
 
 (def test test/basic/appending ()

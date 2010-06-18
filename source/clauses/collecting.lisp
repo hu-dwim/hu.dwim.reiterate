@@ -71,7 +71,7 @@
                          `(def clause ,name
                             (clause-of-kind? ,name)
                             (bind (((value &key in into (at :end) ,@keyword-args) (rest -clause-))
-                                   (value (-unwalk-form- (-walk-form- value))))
+                                   (value (-recurse- value)))
                               (with-possibly-different-iteration-context (in :clause -clause-)
                                 (expand/collector into value ',name :at at
                                                   ,@(mappend (lambda (keyword-arg)

@@ -12,7 +12,7 @@
 
 (def clause finally
   (clause-of-kind? finally)
-  (register/epilogue (-unwalk-form- (-walk-form- (maybe-wrap-with-progn (rest -clause-))))))
+  (register/epilogue (-recurse- (maybe-wrap-with-progn (rest -clause-)))))
 
 (def clause next-iteration
   (clause-of-kind? next-iteration)
@@ -24,13 +24,13 @@
   (clause-of-kind? while)
   (bind (((condition &key in) (rest -clause-)))
     (with-possibly-different-iteration-context (in :clause -clause-)
-      (expand/quit-loop-when `(not ,(-unwalk-form- (-walk-form- condition)))))))
+      (expand/quit-loop-when `(not ,(-recurse- condition))))))
 
 (def clause until
   (clause-of-kind? until)
   (bind (((condition &key in) (rest -clause-)))
     (with-possibly-different-iteration-context (in :clause -clause-)
-      (expand/quit-loop-when (-unwalk-form- (-walk-form- condition))))))
+      (expand/quit-loop-when (-recurse- condition)))))
 
 (def clause first-time?
   (clause-of-kind? first-time?)

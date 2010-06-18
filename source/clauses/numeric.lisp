@@ -11,7 +11,7 @@
   (progn
     (unless (length= 2 -clause-)
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
-    (bind ((count (-unwalk-form- (-walk-form- (second -clause-))))
+    (bind ((count (-recurse- (second -clause-)))
            (variable (register/variable "REPEAT/COUNTER" count)))
       `(progn
          (when (<= ,variable 0)
@@ -40,12 +40,12 @@
   (def clause sum
       (clause-of-kind? sum summing)
     (single-variable-clause-expander (variable value-form 0 :sum :result-form-candidate #t)
-      `(incf ,variable ,(-unwalk-form- (-walk-form- value-form)))))
+      `(incf ,variable ,(-recurse- value-form))))
 
   (def clause count
       (clause-of-kind? count counting)
     (single-variable-clause-expander (variable value-form 0 :sum :result-form-candidate #t :type 'integer)
-      `(when ,(-unwalk-form- (-walk-form- value-form))
+      `(when ,(-recurse- value-form)
          (incf ,variable)))))
 
 (def function register-generator/numeric-sequence (name-form from to comparator by)
@@ -64,8 +64,8 @@
     (with-possibly-different-iteration-context (in :clause -clause-)
       (expand/generator/has-more-check
        (register-generator/numeric-sequence name
-                                            (-unwalk-form- (-walk-form- from))
-                                            (-unwalk-form- (-walk-form- to))
+                                            (-recurse- from)
+                                            (-recurse- to)
                                             '<=
                                             by)))))
 
@@ -75,8 +75,8 @@
     (with-possibly-different-iteration-context (in :clause -clause-)
       (expand/generator/has-more-check
        (register-generator/numeric-sequence name
-                                            (-unwalk-form- (-walk-form- from))
-                                            (-unwalk-form- (-walk-form- below))
+                                            (-recurse- from)
+                                            (-recurse- below)
                                             '<
                                             by)))))
 
@@ -86,7 +86,7 @@
     (with-possibly-different-iteration-context (in :clause -clause-)
       (expand/generator/has-more-check
        (register-generator/numeric-sequence name
-                                            (-unwalk-form- (-walk-form- from))
-                                            (-unwalk-form- (-walk-form- downto))
+                                            (-recurse- from)
+                                            (-recurse- downto)
                                             '>=
-                                            (-unwalk-form- (-walk-form- by)))))))
+                                            (-recurse- by))))))

@@ -34,14 +34,14 @@
 (def clause for/in-list
   (named-clause-of-kind? for in-list)
   (bind (((name nil the-list &key mutable initially) (rest -clause-))
-         (the-list (-unwalk-form- (-walk-form- the-list))))
+         (the-list (-recurse- the-list)))
     (expand/generator/stepper
      (register-generator/in-list name the-list mutable initially))))
 
 (def clause generate/in-list
   (named-clause-of-kind? generate in-list)
   (bind (((name nil the-list &key mutable initially) (rest -clause-))
-         (the-list (-unwalk-form- (-walk-form- the-list))))
+         (the-list (-recurse- the-list)))
     (register-generator/in-list name the-list mutable initially)
     (values)))
 
@@ -73,21 +73,21 @@
 (def clause for/in-vector
   (named-clause-of-kind? for in-vector)
   (bind (((name nil the-vector &key mutable initially (start 0) end (step 1)) (rest -clause-))
-         (the-vector (-unwalk-form- (-walk-form- the-vector))))
+         (the-vector (-recurse- the-vector)))
     (expand/generator/stepper
      (register-generator/in-vector name the-vector mutable
-                                   (-unwalk-form- (-walk-form- initially))
-                                   (-unwalk-form- (-walk-form- start))
-                                   (-unwalk-form- (-walk-form- end))
-                                   (-unwalk-form- (-walk-form- step))))))
+                                   (-recurse- initially)
+                                   (-recurse- start)
+                                   (-recurse- end)
+                                   (-recurse- step)))))
 
 (def clause generate/in-vector
   (named-clause-of-kind? generate in-vector)
   (bind (((name nil the-vector &key mutable initially (start 0) end (step 1)) (rest -clause-))
-         (the-vector (-unwalk-form- (-walk-form- the-vector))))
+         (the-vector (-recurse- the-vector)))
     (register-generator/in-vector name the-vector mutable
-                                  (-unwalk-form- (-walk-form- initially))
-                                  (-unwalk-form- (-walk-form- start))
-                                  (-unwalk-form- (-walk-form- end))
-                                  (-unwalk-form- (-walk-form- step)))
+                                  (-recurse- initially)
+                                  (-recurse- start)
+                                  (-recurse- end)
+                                  (-recurse- step))
     (values)))

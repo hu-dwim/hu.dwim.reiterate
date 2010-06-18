@@ -82,25 +82,29 @@
            (setf name (pop body))))
         (unless (typep name 'loop-name)
           (name-error))))
-    (with-form-object (*loop-form* 'loop-form parent :whole form :name name :body body
-                                   :walk-environment/enclosing walk-environment
-                                   :walk-environment/loop-body (walk-environment/copy walk-environment))
-      (flet ((augment (type value)
-               (walk-environment/augment! (walk-environment/loop-body-of *loop-form*) type value)))
-        (augment :tag (label/top-of *loop-form*))
-        (augment :tag (label/next-iteration-of *loop-form*))
-        (augment :tag (label/end-of *loop-form*)))
-      (bind ((body-conses (body-conses-of *loop-form*)))
-        ;; register which conses are part of our body, so that we can properly handle nested usage later
-        (labels ((recurse (node)
-                   (unless (or (atom node)
-                               (reiterate-toplevel-macro-name? (first node)))
-                     (log.debug "Registering as body of ~A ~S" *loop-form* node)
-                     (setf (gethash node body-conses) #t)
-                     (do ((cons node (cdr cons)))
-                         ((not (consp cons)))
-                       (recurse (car cons))))))
-          (recurse body))))))
+    (bind ((block-form (with-form-object (block 'block-form nil :name name)
+                         (walk-environment/augment! walk-environment :block name block)))
+           (loop-form (with-form-object (*loop-form* 'loop-form parent :whole form :name name :body body
+                                                     :walk-environment/enclosing walk-environment
+                                                     :walk-environment/loop-body (walk-environment/copy walk-environment))
+                        (flet ((augment (type value)
+                                 (walk-environment/augment! (walk-environment/loop-body-of *loop-form*) type value)))
+                          (augment :tag (label/top-of *loop-form*))
+                          (augment :tag (label/next-iteration-of *loop-form*))
+                          (augment :tag (label/end-of *loop-form*)))
+                        (bind ((body-conses (body-conses-of *loop-form*)))
+                          ;; register which conses are part of our body, so that we can properly handle nested usage later
+                          (labels ((recurse (node)
+                                     (unless (or (atom node)
+                                                 (reiterate-toplevel-macro-name? (first node)))
+                                       (log.debug "Registering as body of ~A ~S" *loop-form* node)
+                                       (setf (gethash node body-conses) #t)
+                                       (do ((cons node (cdr cons)))
+                                           ((not (consp cons)))
+                                         (recurse (car cons))))))
+                            (recurse body))))))
+      (setf (parent-of block-form) loop-form)
+      loop-form)))
 
 (for-each-iterator-alias alias
   `(def walker/reiterate ,alias

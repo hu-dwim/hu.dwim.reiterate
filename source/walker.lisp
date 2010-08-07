@@ -85,6 +85,7 @@
     (bind ((block-form (with-form-object (block 'block-form nil :name name)
                          (walk-environment/augment! walk-environment :block name block)))
            (loop-form (with-form-object (*loop-form* 'loop-form parent :whole form :name name :body body
+                                                     :result-of-macroexpansion? #t
                                                      :walk-environment/enclosing walk-environment
                                                      :walk-environment/loop-body (walk-environment/copy walk-environment))
                         (flet ((augment (type value)

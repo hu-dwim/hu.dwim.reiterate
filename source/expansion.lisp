@@ -23,8 +23,9 @@
 (def function call-expand-from-macro (whole lexenv)
   ;; We must to make sure FORM does not have reused CONS cells because we use the CONS identities to
   ;; identify which iter macro they are coming from in case of nesting.
-  ;; It can happen in compiled code (e.g. on SBCL this is and endless loop when used inside a defun
+  ;; It can happen in compiled code (e.g. on SBCL this is and endless loop at compile time when used inside a DEFUN)
   ;; because the two REPEATs have the same identity: (iter (repeat 2) (iter (repeat 2)))
+  ;; FIXME on the other hand because of this COPY-TREE below, we don't keep source code identities...
   (setf whole (copy-tree whole))
   (with-active-layers (reiterate)
     (bind ((*loop-form* (walk-form whole :environment (make-walk-environment lexenv)))
@@ -67,7 +68,7 @@
       ((length= 1 result-form-candidates)
        (setf result-form (cdr (first result-form-candidates))))
       ((not (zerop (length result-form-candidates)))
-       (iterate-compile-warning "More than one such clause was used, that can provide a result value. Due to ambiguity the return value will be (VALUES). The form in question is ~A." *loop-form*)))
+       (iterate-compile-warning "More than one such clause was used, that can provide a return value. Due to ambiguity the return value will be (VALUES). The form in question is ~S." *loop-form*)))
     (flet ((generate-exit-jumps (conditions)
              (loop
                :for condition :in conditions

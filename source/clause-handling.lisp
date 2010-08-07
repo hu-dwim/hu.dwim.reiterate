@@ -184,7 +184,8 @@
                      (flet ((-recurse- (node &optional (parent *loop-form*) (environment (walk-environment/current-of *loop-form*)))
                               (check-type parent walked-form)
                               (log.debug "Will walk ~S in context ~A" node *loop-form*)
-                              (unwalk-form (walk-form node :parent parent :environment environment))))
+                              (bind ((walked-form (walk-form node :parent parent :environment environment)))
+                                (unwalk-form walked-form))))
                        (declare (ignorable #'-recurse-))
                        ,expander-form)))))))
 

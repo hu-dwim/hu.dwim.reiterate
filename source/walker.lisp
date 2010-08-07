@@ -72,6 +72,7 @@
                                              "ITER-BLOCK")))))
 
 (def function walk-loop-form (form parent walk-environment)
+  "Turn an iterate sexp into a LOOP-FORM CLOS object without walking its body."
   (bind ((name nil)
          (body (rest form)))
     (flet ((name-error ()

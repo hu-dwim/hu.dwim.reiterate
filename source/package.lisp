@@ -23,6 +23,8 @@
            #:repeat
            #:initially
            #:finally
+           #:leave
+           #:finish
            #:next-iteration
            #:first-iteration?
            #:first-time?

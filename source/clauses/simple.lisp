@@ -24,13 +24,13 @@
   (clause-of-kind? while)
   (bind (((condition &key in) (rest -clause-)))
     (with-possibly-different-iteration-context (in :clause -clause-)
-      (expand/quit-loop-when `(not ,(-recurse- condition))))))
+      (expand/finish-loop-when `(not ,(-recurse- condition))))))
 
 (def clause until
   (clause-of-kind? until)
   (bind (((condition &key in) (rest -clause-)))
     (with-possibly-different-iteration-context (in :clause -clause-)
-      (expand/quit-loop-when (-recurse- condition)))))
+      (expand/finish-loop-when (-recurse- condition)))))
 
 (def clause first-time?
   (clause-of-kind? first-time?)

@@ -54,13 +54,16 @@
               `(,stepper
                 ,assign-form)))))))
 
-(def function expand/quit-loop-when (condition)
-  `(when ,condition
-     (go ,(label/end-of *loop-form*))))
+(def function expand/finish-loop-when (condition)
+  (bind ((leave-form `(go ,(label/end-of *loop-form*))))
+    (if (eq condition #t)
+        leave-form
+        `(when ,condition
+           ,leave-form))))
 
 (def (function e) expand/generator/has-more-check (name)
   (bind (((&key has-more-condition &allow-other-keys) (lookup/generator name)))
-    (expand/quit-loop-when `(not ,has-more-condition))))
+    (expand/finish-loop-when `(not ,has-more-condition))))
 
 (def (function e) register/generator (name place stepper stepper-place-order has-more-condition &key (mutable #f)
                                            (type +top-type+) initial-value)

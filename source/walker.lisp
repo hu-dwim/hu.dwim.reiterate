@@ -36,6 +36,7 @@
 (def class* loop-form (walked-form)
   ((whole)
    (name nil :type loop-name)
+   (block-name :type loop-name)
    (body)
    (body-conses (make-hash-table :test #'eq))
    (walk-environment/enclosing)
@@ -63,6 +64,12 @@
 
 (def print-object loop-form
   (princ (name-of -self-)))
+
+(def constructor (loop-form name)
+  (unless (slot-boundp -self- 'block-name)
+    (setf (block-name-of -self-) (gensym (if name
+                                             (string name)
+                                             "ITER-BLOCK")))))
 
 (def function walk-loop-form (form parent walk-environment)
   (bind ((name nil)

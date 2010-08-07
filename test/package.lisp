@@ -22,11 +22,4 @@
   (:shadow #:test)
   (:readtable-setup (setup-readtable/same-as-package :hu.dwim.reiterate)))
 
-(in-package :hu.dwim.reiterate.test)
-
-(bind ((mohter-package (find-package :hu.dwim.reiterate))
-       (test-package (find-package :hu.dwim.reiterate.test)))
-  (do-symbols (symbol mohter-package)
-    (when (and (eq (symbol-package symbol) mohter-package)
-               (not (find-symbol (symbol-name symbol) test-package)))
-      (import symbol))))
+(hu.dwim.common:import-all-owned-symbols :hu.dwim.reiterate :hu.dwim.reiterate.test)

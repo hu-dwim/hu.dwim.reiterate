@@ -18,5 +18,6 @@
                              (:file "lexenv" :depends-on ("suite"))
                              (:file "nesting" :depends-on ("suite"))
                              (:file "numeric" :depends-on ("suite"))
+                             (:file "source-code-identity" :depends-on ("package"))
                              (:file "suite" :depends-on ("package"))
                              (:file "types" :depends-on ("suite"))))))

@@ -26,10 +26,10 @@
     (check '(iter (:repeat 2)
                   (for (the string i) in-list '(1 2 3))
                   (:collecting i)
-                  (finally (return 42))))
+                  (finally (leave 42))))
     (check '(iter (for (the fixnum i) :in-vector '(1 2 3))
                   (:collecting i)
-                  (finally (return 42))))))
+                  (finally (leave 42))))))
 
 (def test test/basic/collecting ()
   (is (equal '(1 1 1)
@@ -62,6 +62,21 @@
              (eval '(iter (for i :from 2 :to 10)
                           (until (> i 5))
                           (collecting i))))))
+
+(def test test/basic/leave ()
+  (finishes (eval '(iter (leave))))
+  (finishes (equal 42 (eval '(iter (leave 42)))))
+  (finishes (equal 42 (eval '(iter (collecting 101)
+                                   (leave 42)
+                                   (finally (collecting 102)))))))
+
+(def test test/basic/finish ()
+  (finishes (eval '(iter (finish))))
+  (finishes (equal 42 (eval '(iter (finish)
+                                   (finally (leave 42))))))
+  (finishes (equal '(101 102) (eval '(iter (collecting 101)
+                                           (finish)
+                                           (finally (collecting 102)))))))
 
 (def test test/basic/appending ()
   (is (equal '((A) A (B B) B B (C) C)
@@ -109,7 +124,7 @@
   (is (= 0  (eval '(iter (repeat -1.5) (counting t)))))
   (is (= 2  (eval '(iter (for i :in-list '(1 2 3))
                          (counting (oddp i) :into result)
-                         (finally (return result)))))))
+                         (finally (leave result)))))))
 
 (def test test/basic/initially ()
   (is (equal '(42)
@@ -119,14 +134,16 @@
                             (collecting x)))))))
 
 (def test test/basic/finally ()
-  (is (= 42 (eval '(iter named alma
-                    (repeat 1)
-                    (finally (return-from alma 42))))))
+  (is (equal 42 (eval '(iter (repeat 1)
+                             (finally (leave 42))))))
+  (is (equal 42 (eval '(iter named alma
+                             (repeat 1)
+                             (finally (leave 42 :in alma))))))
   (is (equal '(101 42 42) (eval '(iter
                                   (repeat 2)
                                   (collecting 42 :into x)
                                   (progn
-                                    (finally (return (list* 101 x)))))))))
+                                    (finally (leave (list* 101 x)))))))))
 
 (def test test/basic/first-time? ()
   (is (equal '("x" "," "x" "," "x")

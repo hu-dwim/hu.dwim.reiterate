@@ -14,8 +14,8 @@
         :hu.dwim.def
         :hu.dwim.defclass-star
         :hu.dwim.reiterate
+        :hu.dwim.presentation
         :hu.dwim.syntax-sugar
         :hu.dwim.util
-        :metabang-bind
-        :hu.dwim.wui)
-  (:readtable-setup (setup-readtable/same-as-package :hu.dwim.wui)))
+        :metabang-bind)
+  (:readtable-setup (setup-readtable/same-as-package :hu.dwim.presentation)))

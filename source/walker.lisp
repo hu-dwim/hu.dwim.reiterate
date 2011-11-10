@@ -75,8 +75,11 @@
   "Turn an iterate sexp into a LOOP-FORM CLOS object without walking its body."
   (bind ((name nil)
          (body (rest form)))
-    (flet ((name-error ()
-             (iterate-compile-error "~S is not a valid name for a loop in form ~S" name form)))
+    (labels ((assert-proper-name ()
+               (unless name
+                 (name-error)))
+             (name-error ()
+               (iterate-compile-error "~S is not a valid name for a loop in form ~S" name form)))
       (when (and body
                  (first body))
         (cond
@@ -84,10 +87,17 @@
                 (string= (first body) 'named))
            (pop body)
            (setf name (pop body))
-           (unless name
-             (name-error)))
+           (assert-proper-name))
+          ((and (consp (first body))
+                (string= (first (first body)) 'named))
+           (bind ((clause (pop body)))
+             (unless (length= 2 clause)
+               (iterate-compile-error "Illegal clause ~S" clause))
+             (setf name (second clause))
+             (assert-proper-name)))
           ((typep (first body) 'loop-name)
-           (setf name (pop body))))
+           (setf name (pop body))
+           (assert-proper-name)))
         (unless (typep name 'loop-name)
           (name-error))))
     (bind ((block-form (with-form-object (block 'block-form nil :name name)

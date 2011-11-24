@@ -238,7 +238,7 @@
            ;; finds the first loop-form on the stack that owns this form
            (if (boundp '*loop-form-stack*)
                (progn
-                 (log.debug "BELONGS-TO-A-PARENT-ITERATE-FORM? will test with stack ~A" (rest *loop-form-stack*))
+                 (log.debug "LOOP-STACK-POSITION will search stack ~A" *loop-form-stack*)
                  (position-if (lambda (loop-form)
                                 (bind ((result (gethash form (body-conses-of loop-form))))
                                   (log.debug "BELONGS-TO-A-PARENT-ITERATE-FORM? ~S ~A loop-form ~A" form loop-form result)

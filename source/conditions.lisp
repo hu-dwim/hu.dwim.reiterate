@@ -6,7 +6,7 @@
 
 (in-package :hu.dwim.reiterate)
 
-;; TODO rename
+;; TODO rename to reiterate...
 
 (def (condition* e) iterate-compile-condition ()
   ((loop-form-stack *loop-form-stack*)))

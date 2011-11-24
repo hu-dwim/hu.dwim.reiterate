@@ -38,4 +38,9 @@ Philipp Marek <philipp@marek.priv.at>
 >      (print (list a b c d e)))
 
 
+strided iteration: it just means iterating across elements x_a, x_{a+s}, x_{a+2s} ...
+
+(iter (collecting (...) into (values a b c)))
+
+
 |#

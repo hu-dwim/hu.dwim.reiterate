@@ -10,7 +10,8 @@
 
 (defsystem :hu.dwim.reiterate.test
   :class hu.dwim.test-system
-  :depends-on (:hu.dwim.reiterate
+  :depends-on (:hu.dwim.debug
+               :hu.dwim.reiterate+hu.dwim.logger
                :hu.dwim.stefil+hu.dwim.def+swank)
   :components ((:module "test"
                 :components ((:file "package")

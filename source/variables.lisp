@@ -21,13 +21,3 @@
 
 (def special-variable *clause*)
 
-;;;;;;
-;;; a very simple hu.dwim.logger simulation so that our emacs coloring kicks in
-
-#+nil
-(def macro log.debug (message &rest args)
-  `(format *debug-io* ,(string+ message "~%") ,@args))
-
-(def macro log.debug (message &rest args)
-  (declare (ignore message args))
-  `(values))

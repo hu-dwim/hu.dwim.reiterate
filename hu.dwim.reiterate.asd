@@ -27,6 +27,7 @@
                              (:file "clause-handling" :depends-on ("conditions" "form-utils" "package" "variables" "walker"))
                              (:file "expansion" :depends-on ("clause-handling" "conditions" "variables" "walker"))
                              (:file "form-utils" :depends-on ("variables"))
+                             (:file "logger" :depends-on ("package"))
                              (:file "package")
-                             (:file "variables" :depends-on ("package"))
+                             (:file "variables" :depends-on ("package" "logger"))
                              (:file "walker" :depends-on ("conditions" "package" "variables"))))))

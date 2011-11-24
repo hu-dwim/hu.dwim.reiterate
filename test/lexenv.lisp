@@ -35,12 +35,12 @@
     (is (proclaimed-special-variable?/lexical '*dummy-special* env))))
 
 (def test test/lexenv/bug/1 ()
-  ;; the problem is this: the FOR clause introduces the new variable FOO in the LOOP-BODY walk env,
-  ;; but it can not introduce it into the rest of the subtree starting with its parent's sibling, because
-  ;; the walk env is immutable and augmentation copies it as the walking descends down.
   (not-signals warning
     (with-expected-failures
       (is (equal '(0 1 2)
+                 ;; the problem is this: the FOR clause introduces the new variable FOO in the LOOP-BODY walk env,
+                 ;; but it can not introduce it into the rest of the subtree starting with its parent's sibling, because
+                 ;; the walk env is immutable and augmentation copies it as the walking descends down.
                  (eval '(iter (progn
                                 (for foo :from 0 :to 2)
                                 (collecting foo)))))))

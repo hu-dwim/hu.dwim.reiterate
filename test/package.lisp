@@ -21,7 +21,9 @@
         :hu.dwim.walker
         :hu.dwim.util
         :metabang-bind)
-  (:shadow #:test)
+  (:shadow #:test
+           #:eval
+           #:macroexpand)
   (:shadowing-import-from :hu.dwim.reiterate
                           #:log)
   (:readtable-setup (setup-readtable/same-as-package :hu.dwim.reiterate)))

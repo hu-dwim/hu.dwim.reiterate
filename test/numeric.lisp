@@ -35,4 +35,3 @@
              (eval '(iter (for i :from -1 :downto -3)
                           (symbol-macrolet ((x (* i i)))
                             (summing x)))))))
-

@@ -21,12 +21,19 @@
       (expand))))
 
 (def function call-expand-from-macro (whole lexenv)
-  ;; We must to make sure FORM does not have reused CONS cells because we use the CONS identities to
-  ;; identify which iter macro they are coming from in case of nesting.
-  ;; It can happen in compiled code (e.g. on SBCL this is and endless loop at compile time when used inside a DEFUN)
-  ;; because the two REPEATs have the same identity: (iter (repeat 2) (iter (repeat 2)))
-  ;; FIXME on the other hand because of this COPY-TREE below, we don't keep source code identities...
-  (setf whole (copy-tree whole))
+  (if *preserve-source-form-identities*
+      (bind ((seen (make-hash-table :test 'eq)))
+        (labels ((recurse (object)
+                   (when (consp object)
+                     (when (gethash object seen)
+                       (iterate-compile-error "hu.dwim.reiterate relies on the cons cell identities of the source form, and the form you provided repeatedly contains the same identity. You may disable this error by setting the variable ~S to T, but by that you'll also hinder the debugger's ability from properly locating source code from stack frames. The repeated form is ~S." '*preserve-source-form-identities* object))
+                     (setf (gethash object seen) #t)
+                     (progn
+                       (recurse (car object))
+                       (recurse (cdr object))))))
+          (recurse whole)))
+      ;; this copy-tree hinders the debugger from matching source code to stack frames
+      (setf whole (copy-tree whole)))
   (with-active-layers (reiterate)
     (bind ((*loop-form* (walk-form whole :environment (make-walk-environment lexenv)))
            (*loop-form-stack* (cons *loop-form* *loop-form-stack*)))
@@ -57,7 +64,8 @@
     (log.debug "Processing toplevel iterate form ~S; stack is ~A" *loop-form* *loop-form-stack*)
     (setf body (mapcar (lambda (el)
                          (log.debug "Walking body form ~S; stack is ~A" el *loop-form-stack*)
-                         (bind ((walked (walk-form el :parent *loop-form* :environment walk-environment/loop-body)))
+                         (bind ((*clause* nil)
+                                (walked (walk-form el :parent *loop-form* :environment walk-environment/loop-body)))
                            (log.debug "Finished walking body form ~S, will unwalk now" el)
                            (unwalk-form walked)))
                        body))

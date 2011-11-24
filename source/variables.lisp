@@ -21,3 +21,5 @@
 
 (def special-variable *clause*)
 
+(def (special-variable e) *preserve-source-form-identities* #t
+  "Try to preserve source code cons cell identities, so that the debugger can properly locate source forms inside reiterate loops (e.g. Slime's 'v' on a stack frame). When this is enabled, and your lisp is optimizing literals properly (e.g. SBCL in compile mode), then you may experience problems with quoted forms in compiled mode, e.g. when something this is compiled (eval '(iter (repeat 2) (iter (repeat 2)))).")

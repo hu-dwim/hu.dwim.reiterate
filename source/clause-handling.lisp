@@ -207,6 +207,30 @@
        (or (null sub-kind2)
            (equal/clause-name sub-kind2 (fifth clause)))))
 
+;; used as a marker that we have something down in the AST that is the result of a clause expansion
+(def class* unwalked-clause-form (unwalked-form)
+  ())
+
+(def layered-method unwalk-form :in reiterate :around (form)
+  (if (or (boundp 'unconditionally-unwalk?)
+          *clause* ; if we are inside a clause, then returning the original form is not an option
+          (result-of-macroexpansion? form)
+          (typep form 'unwalked-clause-form) ; shortcut for the map-ast below, to generate less log noise
+          (block finding-loop-form
+            (map-ast (lambda (child-form)
+                       (when (typep child-form '(or loop-form unwalked-clause-form))
+                         (log.debug "Not skipping unwalk because of child node: ~A. Source is ~S" child-form (source-of form))
+                         (return-from finding-loop-form #t))
+                       child-form)
+                     form)
+            #f))
+      (bind ((unconditionally-unwalk? #t)) ; to skip repeated unnecessary map-ast calls
+        (declare (special unconditionally-unwalk?))
+        (call-next-layered-method))
+      (progn
+        (log.debug "Seems like there were no clauses, so we return the original source ~S of form ~A" (source-of form) form)
+        (source-of form))))
+
 (def layered-method walk-form/compound :in reiterate :around (name form parent environment)
   (when (boundp '*loop-form*)
     (setf (walk-environment/current-of *loop-form*) environment))
@@ -230,8 +254,8 @@
             (with-possibly-different-iteration-context ((loop-stack-position form) :clause form)
               (bind ((result (multiple-value-list (funcall expander form))))
                 (log.debug "Expanded ~S into ~S" form result)
-                (setf result (make-instance 'unwalked-form :source (if (length= 0 result)
-                                                                       '(values)
-                                                                       (first result))))
+                (setf result (make-instance 'unwalked-clause-form :source (if (length= 0 result)
+                                                                              '(values)
+                                                                              (first result))))
                 (return-from walk-form/compound result))))))))
   (call-next-layered-method))

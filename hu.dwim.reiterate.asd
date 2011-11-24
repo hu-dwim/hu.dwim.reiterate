@@ -11,11 +11,15 @@
 (defsystem :hu.dwim.reiterate
   :class hu.dwim.system
   :description "Iterator macro inspired by iterate."
-  :depends-on (:hu.dwim.common
+  :depends-on (:alexandria
+               :anaphora
+               :hu.dwim.common-lisp
                :hu.dwim.def
                :hu.dwim.defclass-star
                :hu.dwim.syntax-sugar+hu.dwim.walker
-               :hu.dwim.util)
+               ;; TODO :hu.dwim.util brings in many dependencies through :hu.dwim.common (including nothing less than iterate itself! :)
+               :hu.dwim.util
+               :metabang-bind)
   :components ((:module "source"
                 :components ((:module "clauses"
                               :components ((:file "numeric")

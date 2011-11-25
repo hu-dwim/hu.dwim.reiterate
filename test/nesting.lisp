@@ -9,18 +9,17 @@
 (def suite* (test/nesting :in test))
 
 (def test test/nesting/1 ()
-  #+nil ;; TODO expands into infinite loop
   (with-expected-failures
-    (is (equal '(a b c)
+    (is (equal '(a a b b c c)
                (eval '(iter named outer
                        (for i :in-list '(a b c))
                        (macrolet ((wrapper (&body body)
-                                    ;; FIXME unfortunately we can't detect this ITER due to ` hiding it from us
+                                    ;; FIXME unfortunately we can't detect this ITER due to ` hiding it from us while processing OUTER
                                     `(iter named inner
-                                           (repeat 2)
+                                           (repeat 2) ; and due to that this repeat is processed in OUTER
                                            ,@body)))
                          (wrapper
-                          ;; this collecting should collect into OUTER
+                          ;; this collecting should collect into OUTER (due to clauses being lexically scoped)
                           (collecting i)))))))))
 
 (def test test/nesting/lexical-scoping-of-clauses ()
@@ -32,7 +31,7 @@
                      (iter named outer
                            (for i :in-list '(a b c))
                            (wrapper
-                            ;; this collecting should collect into OUTER (lexical scoping)
+                            ;; this collecting should collect into OUTER (due to clauses being lexically scoped)
                             (collecting i)))))))
   (is (equal '((1 2 3) (1 2 3))
              (eval '(iter named outer
@@ -41,7 +40,7 @@
                                             (collecting i)
                                             (when (> i 2)
                                               (block nil
-                                                ;; make sure LEAVE does not rely on the name of the ITER
+                                                ;; make sure FINISH does not rely on the name of the ITER and is lexically scoped to the inner loop
                                                 (finish)))))))))
   (is (equal '(1 2 3)
              (eval '(iter named outer

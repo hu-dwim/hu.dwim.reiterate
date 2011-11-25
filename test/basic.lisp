@@ -115,18 +115,25 @@
                          (summing foo)))))))
 
 (def test test/basic/sum ()
-  (is (= 10 (eval '(iter (repeat 9.5) (sum 1)))))
-  (signals error (eval '(locally
-                            (declare #+sbcl(sb-ext:muffle-conditions warning))
-                          (iter (repeat 1) (sum 'not-a-number))))))
+  (is (= 10 (eval '(iter (repeat 10) (sum 1)))))
+  (with-muffled-warnings (warning)
+    (signals type-error
+      (eval '(iter (repeat 1) (sum 'not-a-number))))))
 
 (def test test/basic/count ()
-  (is (= 10 (eval '(iter (repeat 9.5) (counting t)))))
-  (is (= 9  (eval '(iter (repeat 9) (counting 2)))))
-  (is (= 0  (eval '(iter (repeat -1.5) (counting t)))))
+  (is (= 9  (eval '(iter (repeat 9) (counting t)))))
+  (is (= 3  (eval '(iter (repeat 3) (counting 42)))))
   (is (= 2  (eval '(iter (for i :in-list '(1 2 3))
                          (counting (oddp i) :into result)
                          (finally (leave result)))))))
+
+(def test test/basic/repeat ()
+  (is (equal '(42 42 42) (eval '(iter (repeat 3) (collecting 42)))))
+  (with-muffled-warnings (warning)
+    (signals type-error
+      (eval '(iter (repeat 9.5) (counting t))))
+    (signals type-error
+      (eval '(iter (repeat -1.5) (counting t))))))
 
 (def test test/basic/initially ()
   (is (equal '(42)
@@ -184,7 +191,7 @@
                                  (incf x))
                             data))))))
 
-(def test test/basic/gnerate/in-list ()
+(def test test/basic/generate/in-list ()
   (is (equal '(a a x b b y c c)
              (eval '(iter (generate i :in-list '(a b c))
                           (generate j :in-list '(x y))

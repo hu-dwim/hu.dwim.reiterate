@@ -50,7 +50,7 @@
   (clause-of-kind? first-time?)
   (bind (((&key in) (rest -clause-)))
     (with-possibly-different-iteration-context (in :clause -clause-)
-      (bind ((variable/flag (register/variable "FIRST-TIME/FLAG" #t)))
+      (bind ((variable/flag (register/variable "FIRST-TIME/FLAG" :initial-value #t :type 'boolean)))
         `(prog1
              ,variable/flag
            (setq ,variable/flag #f))))))
@@ -60,7 +60,7 @@
   (bind (((&key in) (rest -clause-)))
     (with-possibly-different-iteration-context (in :clause -clause-)
       (bind ((variable (ensure-clause-data 'first-iteration?
-                         (bind ((variable (register/variable "FIRST-ITERATION?" #t)))
+                         (bind ((variable (register/variable "FIRST-ITERATION?" :initial-value #t :type 'boolean)))
                            (register/next-iteration-form `(setf ,variable #f))
                            variable))))
         variable))))

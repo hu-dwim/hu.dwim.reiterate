@@ -66,17 +66,17 @@
     (expand/finish-loop-when `(not ,has-more-condition))))
 
 (def (function e) register/generator (name place stepper stepper-place-order has-more-condition &key (mutable #f)
-                                           (type +top-type+) initial-value)
+                                           (type +top-type+) (initial-value (initial-value-for-type type)))
   (check-type stepper-place-order (member :stepper/place :place/stepper))
   (bind ((variable/value nil))
     (if mutable
         (with-unique-names (new-value)
-          (setf variable/value (register/variable (string name)))
+          (setf variable/value (register/variable (string name) :initial-value initial-value :type type))
           (register/symbol-macro name `(,name))
           (register/function name () `(,(maybe-wrap-with-type-check type place)) :inline #t)
           (register/function `(setf ,name) `(,new-value) `((setf ,place ,(maybe-wrap-with-type-check type new-value))) :inline #t))
         (setf variable/value (if (consp place)
-                                 (register/variable name initial-value type)
+                                 (register/variable name :initial-value initial-value :type type)
                                  place)))
     (setf (assoc-value (generators-of *loop-form*) name)
           (list :place place
@@ -94,10 +94,7 @@
       (iterate-compile-error "Could not find generator ~S" name))
     generator))
 
-(def (function e) register/variable (name &optional (initial-value nil) (type +top-type+))
-  (register/variable* name :initial-value initial-value :type type))
-
-(def (function e) register/variable* (name &key (type +top-type+) (initial-value nil) (scope :wrapping))
+(def (function e) register/variable (name &key (type +top-type+) (initial-value (initial-value-for-type type)) (scope :wrapping))
   (bind (((:slots walk-environment/loop-body walk-environment/current) *loop-form*)
          (storage-slot-name (ecase scope
                               (:wrapping 'variable-bindings/wrapping)

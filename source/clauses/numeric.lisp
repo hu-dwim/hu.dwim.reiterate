@@ -12,7 +12,7 @@
     (unless (length= 2 -clause-)
       (iterate-compile-error "Unable to parse clause ~S" -clause-))
     (bind ((count (-recurse- (second -clause-)))
-           (variable (register/variable "REPEAT/COUNTER" count)))
+           (variable (register/variable "REPEAT/COUNTER" :initial-value count :type 'non-negative-integer)))
       `(progn
          (when (<= ,variable 0)
            (go ,(label/end-of *loop-form*)))
@@ -32,7 +32,7 @@
                                                            (extract-variable-name-and-type ,into :default-type ,type)
                                                            (values ,temporary-variable-name-prefix ,type)))
                      (,variable-name (ensure-clause-data (list ,clause-data-key-name ,into)
-                                       (register/variable ,name ,initial-value ,overridden-type))))
+                                       (register/variable ,name :initial-value ,initial-value :type ,overridden-type))))
                 ,(when result-form-candidate
                        `(register/result-form-candidate (list ,clause-data-key-name ,name) ,variable-name))
                 (maybe-wrap-with-progn (list ,@body))))))))
@@ -50,8 +50,8 @@
 
 (def function register-generator/numeric-sequence (name-form from to comparator by)
   (bind (((:values name type) (extract-variable-name-and-type name-form))
-         (variable/current (register/variable name from type))
-         (variable/limit (register/variable "FOR/LIMIT" to))
+         (variable/current (register/variable name :initial-value from :type type))
+         (variable/limit (register/variable "FOR/LIMIT" :initial-value to))
          (stepper `(setq ,variable/current (+ ,variable/current ,by)))
          (has-more-condition `(,comparator ,variable/current ,variable/limit)))
     (register/next-iteration-form stepper)

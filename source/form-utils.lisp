@@ -17,7 +17,7 @@
               (typep (third name-form) 'variable-name))
          (values (third name-form) (second name-form))
          (handle-otherwise
-           (iterate-compile-error "Expecting a variable name, possibly inside a ~S form specifying its type, but found ~S" 'the name-form))))
+           (iterate-compile-error "~@<Expecting a variable name, possibly inside a ~S form specifying its type, but found ~S~:@>" 'the name-form))))
     (variable-name
      (values name-form default-type))))
 

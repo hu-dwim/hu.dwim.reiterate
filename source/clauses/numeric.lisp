@@ -10,7 +10,7 @@
   (clause-of-kind? repeat)
   (progn
     (unless (length= 2 -clause-)
-      (iterate-compile-error "Unable to parse clause ~S" -clause-))
+      (iterate-compile-error "~@<Unable to parse clause ~S~:@>" -clause-))
     (bind ((count (-recurse- (second -clause-)))
            (variable (register/variable "REPEAT/COUNTER" :initial-value count :type 'non-negative-integer)))
       `(progn

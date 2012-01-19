@@ -11,7 +11,7 @@
                `(ecase at
                   ((:start :head) ,start)
                   ((:end :tail) ,end))))
-    ;; TODO variable/last-cons is not always necessary (if there are only :at :start stuff)
+    ;; TODO variable/last-cons is not always necessary, only if there is at least one (collecting ... :at :tail)
     (bind (((variable/head variable/last-cons) (ensure-clause-data (list 'collecting name)
                                                  (list (register/variable (or name "COLLECTING/HEAD"))
                                                        (register/variable "COLLECTING/LAST-CONS")))))

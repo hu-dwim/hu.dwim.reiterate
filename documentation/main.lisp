@@ -11,6 +11,9 @@
 
 (def book user-guide (:title "User guide")
   (chapter (:title "Introduction")
+    (chapter (:title "Motivation for the project")
+      (paragraph ()
+        "Iterate has several shortcomings, e.g. its code walker gets tripped up in corner cases, it does not properly update the environment with the variables it introduces, which breaks non-trivial macros inside the body of iterate."))
     (chapter (:title "Origins of the name")
       (paragraph ()
         "The reiterate name was contributed by _3b on #lisp, thanks! It's a pun on iterate, which is a library that highly influenced the API of hu.dwim.reiterate.")))
@@ -19,6 +22,9 @@
       "the TODO is to be filled up... :)")))
 
 #|
+
+flip215: attila_lendvai1: feature request for reiterate: I want to _build_ a vector of size N, and set its elements.
+(14:38:12) flip215: similar to (make-array N :initial-contents ...)
 
 attila: variable allocation and assignment should be flexible enough that most features should work with multiple values and destructuring bind. i'm not sure that that's the case already, but it's noted.
 

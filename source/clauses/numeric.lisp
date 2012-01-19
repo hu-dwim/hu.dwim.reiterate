@@ -49,6 +49,7 @@
          (incf ,variable)))))
 
 (def function register-generator/numeric-sequence (name-form from to comparator by)
+  ;; TODO we could extract a useful type annotation if the values are literal numbers
   (bind (((:values name type) (extract-variable-name-and-type name-form))
          (variable/current (register/variable name :initial-value from :type type))
          (variable/limit (register/variable "FOR/LIMIT" :initial-value to))

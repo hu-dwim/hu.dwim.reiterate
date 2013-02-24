@@ -229,6 +229,7 @@
         (source-of form))))
 
 (def layered-method walk-form/compound :in reiterate :around (name form parent environment)
+  (declare (ignore name parent))
   (when (boundp '*loop-form*)
     (setf (walk-environment/current-of *loop-form*) environment))
   (flet ((loop-stack-position (form)

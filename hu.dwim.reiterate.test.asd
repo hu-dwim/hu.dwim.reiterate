@@ -4,14 +4,9 @@
 ;;;
 ;;; See LICENCE for details.
 
-(load-system :hu.dwim.asdf)
-
-(in-package :hu.dwim.asdf)
-
 (defsystem :hu.dwim.reiterate.test
-  :class hu.dwim.test-system
-  :defsystem-depends-on (:hu.dwim.asdf
-                         :hu.dwim.logger)
+  :defsystem-depends-on (:hu.dwim.asdf)
+  :class hu.dwim.asdf:hu.dwim.system
   :depends-on (:hu.dwim.debug
                :hu.dwim.logger
                :hu.dwim.reiterate

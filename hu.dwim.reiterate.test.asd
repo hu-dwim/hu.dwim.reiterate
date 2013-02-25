@@ -6,7 +6,7 @@
 
 (defsystem :hu.dwim.reiterate.test
   :defsystem-depends-on (:hu.dwim.asdf)
-  :class hu.dwim.asdf:hu.dwim.system
+  :class hu.dwim.asdf:hu.dwim.test-system
   :depends-on (:hu.dwim.debug
                :hu.dwim.logger
                :hu.dwim.reiterate

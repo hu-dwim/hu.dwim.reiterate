@@ -5,7 +5,7 @@
 ;;; See LICENCE for details.
 
 (defsystem :hu.dwim.reiterate
-  :defsystem-depends-on (hu.dwim.asdf)
+  :defsystem-depends-on (:hu.dwim.asdf)
   :class hu.dwim.asdf:hu.dwim.system
   :description "Iterator macro inspired by iterate."
   :depends-on (:alexandria

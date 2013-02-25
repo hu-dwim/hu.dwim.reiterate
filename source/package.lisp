@@ -17,7 +17,6 @@
         :hu.dwim.walker
         :hu.dwim.util
         :metabang-bind)
-  (:shadow #:log)
   (:export #:for
            #:generate
            #:next

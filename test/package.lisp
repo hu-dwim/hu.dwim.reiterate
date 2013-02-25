@@ -24,8 +24,6 @@
   (:shadow #:test
            #:eval
            #:macroexpand)
-  (:shadowing-import-from :hu.dwim.reiterate
-                          #:log)
   (:readtable-setup (setup-readtable/same-as-package :hu.dwim.reiterate)))
 
 (hu.dwim.common:import-all-owned-symbols :hu.dwim.reiterate :hu.dwim.reiterate.test)

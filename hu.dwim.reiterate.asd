@@ -6,7 +6,7 @@
 
 (defsystem :hu.dwim.reiterate
   :defsystem-depends-on (:hu.dwim.asdf)
-  :class hu.dwim.asdf:hu.dwim.system
+  :class "hu.dwim.asdf:hu.dwim.system"
   :description "Iterator macro inspired by iterate."
   :depends-on (:alexandria
                :anaphora

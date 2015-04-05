@@ -6,10 +6,8 @@
 
 (in-package :hu.dwim.reiterate)
 
-;; KLUDGE this will break if the user first loads :hu.dwim.logger then compiles :hu.dwim.reiterate, and then restarts the image
-;; and tries to load the :hu.dwim.reiterate fasl's without loading :hu.dwim.logger beforehand.
-#*(((find-package :hu.dwim.logger)
-    ;; if we are loaded after :hu.dwim.logger, then use a full-featured logger
+;; this mess here is for having fewer dependencies. if you need logging for debugging, then edit the read-time condition below and recompile.
+#*((nil
     (def hu.dwim.logger:logger reiterate () :accessor-name-prefix #:log.))
    (t
     ;; otherwise only a fake minimalistic hu.dwim.logger emulation

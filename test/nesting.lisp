@@ -15,6 +15,7 @@
                        (for i :in-list '(a b c))
                        (macrolet ((wrapper (&body body)
                                     ;; FIXME unfortunately we can't detect this ITER due to ` hiding it from us while processing OUTER
+                                    ;; maybe support Fare's transparent quasi-quote so that we can look inside?
                                     `(iter named inner
                                            (repeat 2) ; and due to that this repeat is processed in OUTER
                                            ,@body)))

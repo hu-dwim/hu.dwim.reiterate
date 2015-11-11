@@ -23,6 +23,8 @@
 
 #|
 
+implement :in-sequence
+
 flip215: attila_lendvai1: feature request for reiterate: I want to _build_ a vector of size N, and set its elements.
 (14:38:12) flip215: similar to (make-array N :initial-contents ...)
 
@@ -48,5 +50,12 @@ strided iteration: it just means iterating across elements x_a, x_{a+s}, x_{a+2s
 
 (iter (collecting (...) into (values a b c)))
 
+(progn
+        (load-system :hu.dwim.logger)
+        (develop-system :hu.dwim.reiterate)
+        (eval (read-from-string "(setf (log-level/runtime 'log) +info+)")))
+
+
+maybe a symbol-macrolet to make sequence iteration variables setf-able?
 
 |#

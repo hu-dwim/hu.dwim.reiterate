@@ -13,7 +13,8 @@
                :hu.dwim.common-lisp
                :hu.dwim.def
                :hu.dwim.defclass-star
-               :hu.dwim.syntax-sugar+hu.dwim.walker
+               :hu.dwim.syntax-sugar
+               :hu.dwim.syntax-sugar/lambda-with-bang-args
                ;; TODO :hu.dwim.util brings in many dependencies through :hu.dwim.common (including nothing less than iterate itself! :)
                :hu.dwim.util
                :metabang-bind)

@@ -6,7 +6,7 @@
 
 (in-package :hu.dwim.def)
 
-(def package :hu.dwim.reiterate.test
+(def package :hu.dwim.reiterate/test
   (:use :alexandria
         :anaphora
         :contextl
@@ -26,6 +26,6 @@
            #:macroexpand)
   (:readtable-setup (setup-readtable/same-as-package :hu.dwim.reiterate)))
 
-(hu.dwim.common:import-all-owned-symbols :hu.dwim.reiterate :hu.dwim.reiterate.test)
+(hu.dwim.common:import-all-owned-symbols :hu.dwim.reiterate :hu.dwim.reiterate/test)
 
 (use-package :hu.dwim.debug :hu.dwim.reiterate)

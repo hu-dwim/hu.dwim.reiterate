@@ -67,15 +67,19 @@
          (expand/generator/has-more-check
           (register-generator/numeric-sequence name ,from ,to ,comparator ,by))))))
 
+;; TODO use STEP instead of BY?
+;; TODO make sure clause keywords can be both cl keywords and simple symbols (needs a smarter destructuring bind)
+
 (define-for/from-clause (for/from :priority -1000)
     (named-clause-of-kind? for (from upfrom downfrom))
   (name from-name from &key
-        (by (econd
-             ((or (equal/clause-name from-name 'from)
-                  (equal/clause-name from-name 'upfrom))
-              1)
-             ((equal/clause-name from-name 'downfrom)
-              -1)))
+        (by (eswitch (from-name :test 'equal/clause-name)
+              ('from
+               1)
+              ('upfrom
+               1)
+              ('downfrom
+               -1)))
         in)
   from
   nil
@@ -83,8 +87,7 @@
   by)
 
 (define-for/from-clause for/from/upto
-    (or (named-clause-of-kind? for from to)
-        (named-clause-of-kind? for from upto))
+    (named-clause-of-kind? for from (to upto))
   (name _ from _ to &key (by 1) in)
   from
   to

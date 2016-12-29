@@ -23,6 +23,12 @@
 
 #|
 
+issues with iterate:
+ - code walker
+   - gets tripped in corner cases
+   - doesn't update environment with the introduced variables which brakes complex macros (e.g. hu.dwim.perec:select)
+ - doesn't retain source code cons cell identities, and thus brakes slime show code location
+
 implement :in-sequence
 
 flip215: attila_lendvai1: feature request for reiterate: I want to _build_ a vector of size N, and set its elements.

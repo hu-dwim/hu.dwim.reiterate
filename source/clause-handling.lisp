@@ -205,9 +205,13 @@
   (and (equal/clause-name kind (first clause))
        (extract-variable-name-and-type (second clause) :otherwise #f)
        (or (null sub-kind1)
-           (equal/clause-name sub-kind1 (third clause)))
+           (some (lambda (valid)
+                   (equal/clause-name valid (third clause)))
+                 (ensure-list sub-kind1)))
        (or (null sub-kind2)
-           (equal/clause-name sub-kind2 (fifth clause)))))
+           (some (lambda (valid)
+                   (equal/clause-name valid (fifth clause)))
+                 (ensure-list sub-kind2)))))
 
 ;; used as a marker that we have something down in the AST that is the result of a clause expansion
 (def class* unwalked-clause-form (unwalked-form)

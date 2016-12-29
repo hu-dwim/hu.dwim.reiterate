@@ -41,7 +41,8 @@
 (def (function e) expand/generator/stepper (name)
   (bind (((&key place stepper variable stepper-place-order &allow-other-keys) (lookup/generator name)))
     `(progn
-       ,(expand/generator/has-more-check name)
+       ,@(awhen (expand/generator/has-more-check name)
+           (list it))
        ,@(bind ((assign-form (if (eq place variable)
                                  variable
                                  `(setq ,variable ,place))))
@@ -63,7 +64,9 @@
 
 (def (function e) expand/generator/has-more-check (name)
   (bind (((&key has-more-condition &allow-other-keys) (lookup/generator name)))
-    (expand/finish-loop-when `(not ,has-more-condition))))
+    (if has-more-condition
+        (expand/finish-loop-when `(not ,has-more-condition))
+        (values))))
 
 (def (function e) register/generator (name place stepper stepper-place-order has-more-condition &key (mutable #f)
                                            (type +top-type+) (initial-value (initial-value-for-type type)))

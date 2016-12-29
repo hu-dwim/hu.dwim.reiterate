@@ -168,26 +168,28 @@
   (appendf (forms/epilogue-of *loop-form*) (list form))
   (values))
 
-(def (definer :available-flags "e") clause (name match-condition-form expander-form)
-  (with-standard-definer-options name
-    `(macrolet
-         ((named-clause-of-kind? (&rest args)
-            `(funcall 'named-clause-of-kind? -clause- ,@(mapcar (lambda (el) `(quote ,el)) args)))
-          (clause-of-kind? (&rest kinds)
-            `(or ,@(loop
-                     :for kind :in kinds
-                     :collect `(funcall 'clause-of-kind? -clause- ',kind)))))
-       (setf (find-clause-handler ',name)
-             (list (named-lambda clause-matcher (-clause-)
-                     ,match-condition-form)
-                   (named-lambda clause-expander (-clause-)
-                     (flet ((-recurse- (node &optional (parent *loop-form*) (environment (walk-environment/current-of *loop-form*)))
-                              (check-type parent walked-form)
-                              (log.debug "Will walk ~S in context ~A" node *loop-form*)
-                              (bind ((walked-form (walk-form node :parent parent :environment environment)))
-                                (unwalk-form walked-form))))
-                       (declare (ignorable #'-recurse-))
-                       ,expander-form)))))))
+(def (definer :available-flags "e") clause (name-and-options match-condition-form expander-form)
+  (bind (((name &key (priority 0)) (ensure-list name-and-options)))
+    (with-standard-definer-options name
+      `(macrolet
+           ((named-clause-of-kind? (&rest args)
+              `(funcall 'named-clause-of-kind? -clause- ,@(mapcar (lambda (el) `(quote ,el)) args)))
+            (clause-of-kind? (&rest kinds)
+              `(or ,@(loop
+                       :for kind :in kinds
+                       :collect `(funcall 'clause-of-kind? -clause- ',kind)))))
+         (setf (find-clause-handler ',name)
+               (list ,priority
+                     (named-lambda clause-matcher (-clause-)
+                       ,match-condition-form)
+                     (named-lambda clause-expander (-clause-)
+                       (flet ((-recurse- (node &optional (parent *loop-form*) (environment (walk-environment/current-of *loop-form*)))
+                                (check-type parent walked-form)
+                                (log.debug "Will walk ~S in context ~A" node *loop-form*)
+                                (bind ((walked-form (walk-form node :parent parent :environment environment)))
+                                  (unwalk-form walked-form))))
+                         (declare (ignorable #'-recurse-))
+                         ,expander-form))))))))
 
 (def function equal/clause-name (a b)
   (or (eq a b)
@@ -247,8 +249,11 @@
                               *loop-form-stack*
                               :from-end #t))
                nil)))
-    (dolist (clause-handler (collect-namespace-values 'clause-handler))
-      (bind (((matcher expander) clause-handler))
+    ;; SORT by priority, which is the FIRST in the entry list.
+    (dolist (clause-handler (sort (collect-namespace-values 'clause-handler)
+                                  #'>
+                                  :key #'first))
+      (bind (((_ matcher expander) clause-handler))
         (when (funcall matcher form)
           (bind ((*clause* form))
             (log.debug "Form ~S matched as a clause in stack ~A" form *loop-form-stack*)

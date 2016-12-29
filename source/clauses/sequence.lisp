@@ -38,9 +38,7 @@
 
 (def clause for/in-list
   (named-clause-of-kind? for in-list)
-  ;; TODO should be this, but bind has bugs with nil initial value. same applies down at other clauses...
-  ;; (bind (((name nil the-list &key (mutable #f) (initially nil initially?)) (rest -clause-))
-  (bind (((name nil the-list &key mutable (initially t initially?)) (rest -clause-))
+  (bind (((name _ the-list &key (mutable #f) (initially nil initially?)) (rest -clause-))
          (the-list (-recurse- the-list)))
     (expand/generator/stepper
      (apply 'register-generator/in-list name the-list :mutable mutable
@@ -49,7 +47,7 @@
 
 (def clause generate/in-list
   (named-clause-of-kind? generate in-list)
-  (bind (((name nil the-list &key mutable (initially t initially?)) (rest -clause-))
+  (bind (((name _ the-list &key mutable (initially nil initially?)) (rest -clause-))
          (the-list (-recurse- the-list)))
     (apply 'register-generator/in-list name the-list :mutable mutable
            (when initially?
@@ -89,7 +87,7 @@
 
 (def clause for/in-vector
   (named-clause-of-kind? for in-vector)
-  (bind (((name nil the-vector &key mutable (initially t initially?) (start 0) end (step 1)) (rest -clause-))
+  (bind (((name _ the-vector &key mutable (initially nil initially?) (start 0) end (step 1)) (rest -clause-))
          (the-vector (-recurse- the-vector)))
     (expand/generator/stepper
      (apply 'register-generator/in-vector name the-vector
@@ -102,7 +100,7 @@
 
 (def clause generate/in-vector
   (named-clause-of-kind? generate in-vector)
-  (bind (((name nil the-vector &key mutable (initially t initially?) (start 0) end (step 1)) (rest -clause-))
+  (bind (((name _ the-vector &key mutable (initially nil initially?) (start 0) end (step 1)) (rest -clause-))
          (the-vector (-recurse- the-vector)))
     (apply 'register-generator/in-vector name the-vector
            :mutable mutable

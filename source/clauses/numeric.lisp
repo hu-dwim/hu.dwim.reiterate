@@ -52,42 +52,65 @@
   ;; TODO we could extract a useful type annotation if the values are literal numbers
   (bind (((:values name type) (extract-variable-name-and-type name-form))
          (variable/current (register/variable name :initial-value from :type type))
-         (variable/limit (register/variable "FOR/LIMIT" :initial-value to))
          (stepper `(setq ,variable/current (+ ,variable/current ,by)))
-         (has-more-condition `(,comparator ,variable/current ,variable/limit)))
+         (has-more-condition (if to
+                                 `(,comparator ,variable/current ,(register/variable "FOR/LIMIT" :initial-value to))
+                                 nil)))
     (register/next-iteration-form stepper)
     (register/generator name variable/current stepper :stepper/place has-more-condition :type type)))
 
-(def clause for/from/upto
-  (or (named-clause-of-kind? for from to)
-      (named-clause-of-kind? for from upto))
-  (bind (((name nil from nil to &key (by 1) in) (rest -clause-)))
-    (with-possibly-different-iteration-context (in :clause -clause-)
-      (expand/generator/has-more-check
-       (register-generator/numeric-sequence name
-                                            (-recurse- from)
-                                            (-recurse- to)
-                                            '<=
-                                            by)))))
+(defmacro define-for/from-clause (name matcher destructuring-form from to comparator by)
+  `(def clause ,name
+     ,matcher
+     (bind ((,destructuring-form (rest -clause-)))
+       (with-possibly-different-iteration-context (in :clause -clause-)
+         (expand/generator/has-more-check
+          (register-generator/numeric-sequence name ,from ,to ,comparator ,by))))))
 
-(def clause for/from/below
-  (named-clause-of-kind? for from below)
-  (bind (((name nil from nil below &key (by 1) in) (rest -clause-)))
-    (with-possibly-different-iteration-context (in :clause -clause-)
-      (expand/generator/has-more-check
-       (register-generator/numeric-sequence name
-                                            (-recurse- from)
-                                            (-recurse- below)
-                                            '<
-                                            by)))))
+(define-for/from-clause (for/from :priority -1000)
+    (named-clause-of-kind? for (from upfrom downfrom))
+  (name from-name from &key
+        (by (econd
+             ((or (equal/clause-name from-name 'from)
+                  (equal/clause-name from-name 'upfrom))
+              1)
+             ((equal/clause-name from-name 'downfrom)
+              -1)))
+        in)
+  from
+  nil
+  nil
+  by)
 
-(def clause for/from/downto
-  (named-clause-of-kind? for from downto)
-  (bind (((name nil from nil downto &key (by -1) in) (rest -clause-)))
-    (with-possibly-different-iteration-context (in :clause -clause-)
-      (expand/generator/has-more-check
-       (register-generator/numeric-sequence name
-                                            (-recurse- from)
-                                            (-recurse- downto)
-                                            '>=
-                                            (-recurse- by))))))
+(define-for/from-clause for/from/upto
+    (or (named-clause-of-kind? for from to)
+        (named-clause-of-kind? for from upto))
+  (name _ from _ to &key (by 1) in)
+  from
+  to
+  '<=
+  by)
+
+(define-for/from-clause for/from/downto
+    (named-clause-of-kind? for from downto)
+  (name _ from _ downto &key (by -1) in)
+  from
+  downto
+  '>=
+  by)
+
+(define-for/from-clause for/from/below
+    (named-clause-of-kind? for from below)
+  (name _ from _ below &key (by 1) in)
+  from
+  below
+  '<
+  by)
+
+(define-for/from-clause for/from/above
+    (named-clause-of-kind? for from above)
+  (name _ from _ below &key (by -1) in)
+  from
+  below
+  '>
+  by)

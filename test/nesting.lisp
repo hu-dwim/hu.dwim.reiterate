@@ -8,20 +8,33 @@
 
 (def suite* (test/nesting :in test))
 
-(def test test/nesting/1 ()
-  (with-expected-failures
-    (is (equal '(a a b b c c)
+(def test test/nesting/bug/1 ()
+  (with-expected-failures* (not (featurep :sbcl))
+    ;; the situation: our walker is too eager and it walks into the form generated from the quasiquote reader macro.
+    ;; the consequence of this is that the REPEAT form gets processed as if it was part of OUTER.
+    ;; SBCL generates opaque structs for quasiquoted forms, and thus our walker bounces off of them, and thus it "works" there (accidentally).
+    (is (all-the-same?
+         (list '(a a b b c c)
                (eval '(iter named outer
-                       (for i :in-list '(a b c))
-                       (macrolet ((wrapper (&body body)
-                                    ;; FIXME unfortunately we can't detect this ITER due to ` hiding it from us while processing OUTER
-                                    ;; maybe support Fare's transparent quasi-quote so that we can look inside?
-                                    `(iter named inner
-                                           (repeat 2) ; and due to that this repeat is processed in OUTER
-                                           ,@body)))
-                         (wrapper
-                          ;; this collecting should collect into OUTER (due to clauses being lexically scoped)
-                          (collecting i)))))))))
+                            (for i :in-list '(a b c))
+                            (iter (repeat 2)
+                                  (collecting i :in outer))))
+               (eval '(iter (for i :in-list '(a b c))
+                            (macrolet ((wrapper (&body body)
+                                         `(iter (repeat 2) ; <--- this one
+                                                ,@body)))
+                              (wrapper
+                               ;; this COLLECTING should collect into OUTER (due to clauses being lexically scoped)
+                               (collecting i))))))
+         :test 'equal))))
+
+(def test test/nesting/duplicate-variable ()
+  (is (equal '(d e f d e f d e f)
+             (eval '(iter named outer
+                          (for i :in-list '(a b c))
+                          ;; should shadowing the variable I in OUTER signal a style-warning?
+                          (iter (for i :in-list '(d e f))
+                                (collecting i :in outer)))))))
 
 (def test test/nesting/lexical-scoping-of-clauses ()
   (is (equal '(a a b b c c)

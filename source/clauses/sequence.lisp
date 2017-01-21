@@ -9,9 +9,7 @@
 (def clause next
   (named-clause-of-kind? next)
   (progn
-    (unless (and (length= 2 -clause-)
-                 (typep (second -clause-) 'variable-name))
-      (iterate-compile-error "~@<Unable to parse clause ~S~:>" -clause-))
+    (assert-clause-length 2 (typep (second -clause-) 'variable-name))
     (expand/generator/stepper (second -clause-))))
 
 (def function register-generator/in-list (name-form the-list &key (mutable #f) (initially nil initially?))

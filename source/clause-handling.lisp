@@ -18,6 +18,11 @@
                (setf (assoc-value (clause-data-of *loop-form*) ,key :test #'equal)
                      (progn ,@value))))))))
 
+(def macro assert-clause-length (expected-length &body other-conditions)
+  `(unless (and (length= ,expected-length -clause-)
+                ,@other-conditions)
+     (iterate-compile-error "~@<Unable to parse clause ~S~:>" -clause-)))
+
 (def with-macro* with-different-iteration-context (position)
   (bind ((*loop-form* (elt *loop-form-stack* position))
          (*loop-form-stack* (subseq *loop-form-stack* position)))

@@ -4,7 +4,7 @@
 ;;;
 ;;; See LICENCE for details.
 
-(in-package :hu.dwim.reiterate/test)
+(in-package :hu.dwim.reiterate/iterate/test)
 
 (def suite* (test/iterate-compat :in test))
 

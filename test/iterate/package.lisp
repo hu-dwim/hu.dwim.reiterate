@@ -6,6 +6,32 @@
 
 (in-package :hu.dwim.reiterate/test)
 
+(def package :hu.dwim.reiterate/iterate/test
+  (:use :alexandria
+        :anaphora
+        :contextl
+        :hu.dwim.common-lisp
+        :hu.dwim.debug
+        :hu.dwim.def
+        :hu.dwim.defclass-star
+        :hu.dwim.reiterate/iterate
+        :hu.dwim.logger
+        :hu.dwim.stefil
+        :hu.dwim.syntax-sugar
+        :hu.dwim.walker
+        :hu.dwim.util
+        :metabang-bind)
+  (:shadowing-import-from :hu.dwim.reiterate/test
+                          #:test
+                          #:eval
+                          #:macroexpand)
+  (:readtable-setup (setup-readtable/same-as-package :hu.dwim.reiterate)))
+
+(hu.dwim.common:import-all-owned-symbols :hu.dwim.reiterate/iterate :hu.dwim.reiterate/iterate/test)
+(hu.dwim.common:import-all-owned-symbols :hu.dwim.reiterate :hu.dwim.reiterate/iterate/test)
+
+(use-package :hu.dwim.debug :hu.dwim.reiterate/iterate)
+
 ;; set up ITERATE as a nickname for HU.DWIM.REITERATE/ITERATE,
 ;; and shadowing-import some stuff that the iterate-test is excercising, but we don't want to implement ourselves, like DSETQ.
 (bind ((iter-package (find-package :iterate))

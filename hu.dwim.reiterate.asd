@@ -69,7 +69,6 @@
                :iterate
                (:feature :sbcl (:require :sb-rt))
                (:feature (:not :sbcl) :regression-test))
-  :package-name :hu.dwim.reiterate/test
   :components ((:module "test"
                 :components ((:module "iterate"
                               :components ((:file "package")

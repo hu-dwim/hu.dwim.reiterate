@@ -136,9 +136,13 @@
   (is (equal '(42 42 42) (eval '(iter (repeat 3) (collecting 42)))))
   (with-muffled-warnings (warning)
     (signals type-error
-      (eval '(iter (repeat 9.5) (counting t))))
+      (eval '(locally
+              (declare (optimize (safety 3)))
+              (iter (repeat 9.5) (counting t)))))
     (signals type-error
-      (eval '(iter (repeat -1.5) (counting t))))))
+      (eval '(locally
+              (declare (optimize (safety 3)))
+              (iter (repeat -1.5) (counting t)))))))
 
 (def test test/basic/initially ()
   (is (equal '(42)

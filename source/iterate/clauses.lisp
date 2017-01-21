@@ -18,6 +18,7 @@
          (decf ,variable)
          (values)))))
 
+;; TODO ALWAYS requires support for a one-and-only the-result-variable
 (def clause always
   (clause-of-kind? always)
   (progn

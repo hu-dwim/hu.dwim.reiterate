@@ -10,6 +10,7 @@
   (clause-of-kind? initially)
   (register/prologue (maybe-wrap-with-progn (rest -clause-))))
 
+;; TODO add :in support?
 (def clause finally
   (clause-of-kind? finally)
   (register/epilogue (-recurse- (maybe-wrap-with-progn (rest -clause-)))))

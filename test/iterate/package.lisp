@@ -7,7 +7,7 @@
 (in-package :hu.dwim.reiterate/test)
 
 ;; set up ITERATE as a nickname for HU.DWIM.REITERATE/ITERATE,
-;; and shadowing-import some stuff that we don't want to implement ourselves, like DSETQ
+;; and shadowing-import some stuff that the iterate-test is excercising, but we don't want to implement ourselves, like DSETQ.
 (bind ((iter-package (find-package :iterate))
        (iter-compat-package (find-package :hu.dwim.reiterate/iterate)))
   (when (and iter-package

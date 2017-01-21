@@ -112,8 +112,12 @@
                           (augment :tag (label/next-iteration-of *loop-form*))
                           (augment :tag (label/end-of *loop-form*)))
                         (bind ((body-conses (body-conses-of *loop-form*)))
-                          ;; register which conses are part of our body, so that we can properly handle nested usage later
+                          ;; register which conses are part of our body, so that we can properly handle nested loops later.
+                          ;; NOTE: must be careful with macrolets and inner loops inside a backquote; see TEST/NESTING/BUG/1
                           (labels ((recurse (node)
+                                     ;; FIXME this descends here too eagerly, e.g. into the expansion of the backquote reader.
+                                     ;; (on implementations where it's represented as transparent lists (e.g on CCL), as opposed to e.g. SBCL, where they are opaque structs).
+                                     ;; there should be a semantic walker here that only walks code execution contexts.
                                      (unless (or (atom node)
                                                  (reiterate-toplevel-macro-name? (first node))
                                                  (quoted-form? node))

@@ -28,3 +28,11 @@
       (register/result-form result-variable)
       `(or (setq ,result-variable ,expr)
            (return-from ,(block-name-of *loop-form*) nil)))))
+
+(def clause never
+  (clause-of-kind? never)
+  (progn
+    (assert-clause-length 2)
+    (bind ((expr (-recurse- (second -clause-))))
+      `(when ,expr
+         (return-from ,(block-name-of *loop-form*) nil)))))

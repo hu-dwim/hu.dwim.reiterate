@@ -245,13 +245,20 @@
            ;; finds the first loop-form on the stack that owns this form
            (if (boundp '*loop-form-stack*)
                (progn
-                 (log.debug "LOOP-STACK-POSITION will search stack ~A" *loop-form-stack*)
-                 (position-if (lambda (loop-form)
-                                (bind ((result (gethash form (body-conses-of loop-form))))
-                                  (log.debug "BELONGS-TO-A-PARENT-ITERATE-FORM? ~S ~A loop-form ~A" form loop-form result)
-                                  result))
-                              *loop-form-stack*
-                              :from-end #t))
+                 (log.debug "LOOP-STACK-POSITION will search stack ~A for form ~A" *loop-form-stack* form)
+                 (bind ((position (position-if (lambda (loop-form)
+                                                 (bind ((result (gethash form (body-conses-of loop-form))))
+                                                   ;; NOTE re the log output: POSITION-IF is not obliged to call us as few times as possible,
+                                                   ;; i.e. it is allowed to traverse from the left, even when :FROM-END T is specified.
+                                                   (log.dribble "BELONGS-TO-A-PARENT-ITERATE-FORM? form: ~S loop-form: ~A result: ~A" form loop-form result)
+                                                   result))
+                                               *loop-form-stack*
+                                               :from-end #t)))
+                   (log.debug "LOOP-STACK-POSITION is returning with ~A" position)
+                   ;; TODO this assert should be alive here, but that requires fixing the walker not to walk into non-body
+                   ;; contexts (e.g. into the expansion of the backquote reader)
+                   ;; (assert (integerp position))
+                   position))
                nil)))
     ;; SORT by priority, which is the FIRST in the entry list.
     (dolist (clause-handler (sort (collect-namespace-values 'clause-handler)

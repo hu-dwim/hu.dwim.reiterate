@@ -11,7 +11,7 @@
   (progn
     (unless (and (length= 2 -clause-)
                  (typep (second -clause-) 'variable-name))
-      (iterate-compile-error "~@<Unable to parse clause ~S~:@>" -clause-))
+      (iterate-compile-error "~@<Unable to parse clause ~S~:>" -clause-))
     (expand/generator/stepper (second -clause-))))
 
 (def function register-generator/in-list (name-form the-list &key (mutable #f) (initially nil initially?))

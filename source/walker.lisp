@@ -79,7 +79,7 @@
                (unless name
                  (name-error)))
              (name-error ()
-               (iterate-compile-error "~@<~S is not a valid name for a loop in form ~S~:@>" name form)))
+               (iterate-compile-error "~@<~S is not a valid name for a loop in form ~S~:>" name form)))
       (when (and body
                  (first body))
         (cond
@@ -92,7 +92,7 @@
                 (string= (first (first body)) 'named))
            (bind ((clause (pop body)))
              (unless (length= 2 clause)
-               (iterate-compile-error "~@<Illegal clause ~S~:@>" clause))
+               (iterate-compile-error "~@<Illegal clause ~S~:>" clause))
              (setf name (second clause))
              (assert-proper-name)))
           ((typep (first body) 'loop-name)

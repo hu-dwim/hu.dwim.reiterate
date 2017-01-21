@@ -33,7 +33,7 @@
         (bind ((position (etypecase name-or-position
                            (number name-or-position)
                            (symbol (or (position name-or-position *loop-form-stack* :key 'name-of :test 'equal)
-                                       (iterate-compile-error "~@<Could not find loop called ~S~:[~:; used in clause ~S~]~:@>" name-or-position clause clause))))))
+                                       (iterate-compile-error "~@<Could not find loop called ~S~:[~:; used in clause ~S~]~:>" name-or-position clause clause))))))
           (with-different-iteration-context (position)
             (-with-macro/body-))))
       (-with-macro/body-)))
@@ -94,7 +94,7 @@
 (def (function e) lookup/generator (name)
   (bind ((generator (assoc-value (generators-of *loop-form*) name)))
     (unless generator
-      (iterate-compile-error "~@<Could not find generator ~S~:@>" name))
+      (iterate-compile-error "~@<Could not find generator ~S~:>" name))
     generator))
 
 (def (function e) register/variable (name &key (type +top-type+) (initial-value (initial-value-for-type type)) (scope :wrapping))
@@ -149,7 +149,7 @@
 (def (function e) register/result-form (result-form)
   (log.debug "Registering result-form ~S, stack is ~A" result-form *loop-form-stack*)
   (when (slot-boundp *loop-form* 'result-form)
-    (iterate-compile-error "~@<The result form of ~A is already ~S while processing clause ~S~:@>" *loop-form* (result-form-of *loop-form*) *clause*))
+    (iterate-compile-error "~@<The result form of ~A is already ~S while processing clause ~S~:>" *loop-form* (result-form-of *loop-form*) *clause*))
   (setf (result-form-of *loop-form*) result-form))
 
 (def (function e) register/result-form-candidate (name value-form)

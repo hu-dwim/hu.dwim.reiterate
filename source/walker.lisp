@@ -115,7 +115,8 @@
                           ;; register which conses are part of our body, so that we can properly handle nested usage later
                           (labels ((recurse (node)
                                      (unless (or (atom node)
-                                                 (reiterate-toplevel-macro-name? (first node)))
+                                                 (reiterate-toplevel-macro-name? (first node))
+                                                 (quoted-form? node))
                                        (log.debug "Registering as body of ~A ~S" *loop-form* node)
                                        (setf (gethash node body-conses) #t)
                                        (do ((cons node (cdr cons)))

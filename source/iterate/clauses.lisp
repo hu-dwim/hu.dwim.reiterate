@@ -18,14 +18,12 @@
          (decf ,variable)
          (values)))))
 
-;; TODO ALWAYS requires support for a one-and-only the-result-variable
 (def clause always
   (clause-of-kind? always)
   (progn
     (assert-clause-length 2)
-    (bind ((expr (-recurse- (second -clause-)))
-           (result-variable (register/variable "ALWAYS/RESULT" :initial-value #t)))
-      (register/result-form result-variable)
+    (bind ((result-variable (register/ensure-result-variable))
+           (expr (-recurse- (second -clause-))))
       `(or (setq ,result-variable ,expr)
            (return-from ,(block-name-of *loop-form*) nil)))))
 

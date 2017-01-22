@@ -34,3 +34,12 @@
     (bind ((expr (-recurse- (second -clause-))))
       `(when ,expr
          (return-from ,(block-name-of *loop-form*) nil)))))
+
+(def clause thereis
+  (clause-of-kind? thereis)
+  (progn
+    (assert-clause-length 2)
+    (bind ((result-variable (register/ensure-result-variable))
+           (expr (-recurse- (second -clause-))))
+      `(when (setq ,result-variable ,expr)
+         (return-from ,(block-name-of *loop-form*) ,result-variable)))))

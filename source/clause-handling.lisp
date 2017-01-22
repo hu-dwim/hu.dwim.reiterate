@@ -157,6 +157,13 @@
     (iterate-compile-error "~@<The result form of ~A is already ~S while processing clause ~S~:>" *loop-form* (result-form-of *loop-form*) *clause*))
   (setf (result-form-of *loop-form*) result-form))
 
+(def (function e) register/ensure-result-variable ()
+  (log.debug "Ensuring result-variable, stack is ~A" *loop-form-stack*)
+  (or (result-variable-of *loop-form*)
+      (aprog1
+          (setf (result-variable-of *loop-form*) (register/variable "RESULT"))
+        (register/result-form it))))
+
 (def (function e) register/result-form-candidate (name value-form)
   (log.debug "Registering result-form-candidate with key ~S, form ~S, stack is ~A" name value-form *loop-form-stack*)
   (setf (assoc-value (result-form-candidates-of *loop-form*) name :test 'equal) value-form))

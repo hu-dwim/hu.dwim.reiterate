@@ -54,6 +54,7 @@
    (label/next-iteration (generate-unique-name 'next) :initarg nil)
    (label/end (generate-unique-name 'end) :initarg nil)
    (result-form :initarg nil)
+   (result-variable nil :initarg nil)
    (result-form-candidates '() :initarg nil)
    (forms/prologue '() :initarg nil)
    (forms/next-iteration '() :initarg nil)

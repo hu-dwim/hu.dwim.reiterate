@@ -7,7 +7,7 @@
 (in-package :hu.dwim.reiterate)
 
 (def clause next
-  (named-clause-of-kind? next)
+  (clause-of-kind? next :has-name? #t)
   (progn
     (assert-clause-length 2 (typep (second -clause-) 'variable-name))
     (expand/generator/stepper (second -clause-))))
@@ -35,7 +35,7 @@
                    `(:initial-value ,initially)))))))
 
 (def clause for/in-list
-  (named-clause-of-kind? for in-list)
+  (clause-of-kind? (for in-list))
   (bind (((name _ the-list &key (mutable #f) (initially nil initially?)) (rest -clause-))
          (the-list (-recurse- the-list)))
     (expand/generator/stepper
@@ -44,7 +44,7 @@
               `(:initially ,(-recurse- initially)))))))
 
 (def clause generate/in-list
-  (named-clause-of-kind? generate in-list)
+  (clause-of-kind? (generate in-list))
   (bind (((name _ the-list &key mutable (initially nil initially?)) (rest -clause-))
          (the-list (-recurse- the-list)))
     (apply 'register-generator/in-list name the-list :mutable mutable
@@ -84,7 +84,7 @@
                  `(:initial-value ,initially))))))
 
 (def clause for/in-vector
-  (named-clause-of-kind? for in-vector)
+  (clause-of-kind? (for in-vector))
   (bind (((name _ the-vector &key mutable (initially nil initially?) (start 0) end (step 1)) (rest -clause-))
          (the-vector (-recurse- the-vector)))
     (expand/generator/stepper
@@ -97,7 +97,7 @@
               `(:initially ,(-recurse- initially)))))))
 
 (def clause generate/in-vector
-  (named-clause-of-kind? generate in-vector)
+  (clause-of-kind? (generate in-vector))
   (bind (((name _ the-vector &key mutable (initially nil initially?) (start 0) end (step 1)) (rest -clause-))
          (the-vector (-recurse- the-vector)))
     (apply 'register-generator/in-vector name the-vector

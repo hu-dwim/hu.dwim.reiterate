@@ -180,16 +180,12 @@
   (appendf (forms/epilogue-of *loop-form*) (list form))
   (values))
 
-(def (definer :available-flags "e") clause (name-and-options match-condition-form expander-form)
+(def function %clause-definer-form (-options- clause-kind-matcher name-and-options match-condition-form expander-form)
   (bind (((name &key (priority 0)) (ensure-list name-and-options)))
     (with-standard-definer-options name
       `(macrolet
-           ((named-clause-of-kind? (&rest args)
-              `(funcall 'named-clause-of-kind? -clause- ,@(mapcar (lambda (el) `(quote ,el)) args)))
-            (clause-of-kind? (&rest kinds)
-              `(or ,@(loop
-                       :for kind :in kinds
-                       :collect `(funcall 'clause-of-kind? -clause- ',kind)))))
+           ((,clause-kind-matcher (kinds &key (has-name? nil has-name-was-provided?))
+              `(funcall ',',clause-kind-matcher -clause- ',kinds ,@(when has-name-was-provided? `(:has-name? ,has-name?)))))
          (setf (find-clause-handler ',name)
                (list ,priority
                      (named-lambda clause-matcher (-clause-)
@@ -203,6 +199,17 @@
                          (declare (ignorable #'-recurse-))
                          ,expander-form))))))))
 
+(def (definer :available-flags "e") clause (name-and-options match-condition-form expander-form)
+  (%clause-definer-form -options- 'clause-of-kind? name-and-options match-condition-form expander-form))
+
+#+nil ; not sure if it's useful for anything...
+(def (definer :available-flags "e") clause-alias (name-and-options target-name)
+  (bind (((name &key (priority 0)) (ensure-list name-and-options)))
+    (with-standard-definer-options name
+      `(bind (((_ matcher expander) (find-clause-handler ',name)))
+         (setf (find-clause-handler ',target-name)
+               (list ,priority matcher expander))))))
+
 (def function equal/clause-name (a b)
   (or (eq a b)
       (and (symbolp b)
@@ -210,20 +217,29 @@
       (and (symbolp a)
            (eq (find-symbol (string a) :keyword) b))))
 
-(def function clause-of-kind? (clause kind)
-  (equal/clause-name kind (first clause)))
+(def function %clause-of-kind? (clause kinds &key test (has-name? nil has-name-was-provided?))
+  (bind (((kind1 &optional kind2 kind3) (ensure-list kinds)))
+    (unless has-name-was-provided?
+      (setf has-name? (not (null kind2))))
+    (assert (or (null kind3) kind2))
+    (and (some (lambda (valid)
+                 (funcall test valid (first clause)))
+               (ensure-list kind1))
+         (or (not has-name?)
+             (extract-variable-name-and-type (second clause) :otherwise #f))
+         (or (null kind2)
+             (some (lambda (valid)
+                     (funcall test valid (third clause)))
+                   (ensure-list kind2)))
+         (or (null kind3)
+             (some (lambda (valid)
+                     (funcall test valid (fifth clause)))
+                   (ensure-list kind3))))))
 
-(def function named-clause-of-kind? (clause kind &optional sub-kind1 sub-kind2)
-  (and (equal/clause-name kind (first clause))
-       (extract-variable-name-and-type (second clause) :otherwise #f)
-       (or (null sub-kind1)
-           (some (lambda (valid)
-                   (equal/clause-name valid (third clause)))
-                 (ensure-list sub-kind1)))
-       (or (null sub-kind2)
-           (some (lambda (valid)
-                   (equal/clause-name valid (fifth clause)))
-                 (ensure-list sub-kind2)))))
+(def function clause-of-kind? (clause kinds &key (has-name? nil has-name-was-provided?))
+  (apply '%clause-of-kind? clause kinds :test 'equal/clause-name
+         (when has-name-was-provided?
+           (list :has-name? has-name?))))
 
 ;; used as a marker that we have something down in the AST that is the result of a clause expansion
 (def class* unwalked-clause-form (unwalked-form)

@@ -37,12 +37,12 @@
                 (maybe-wrap-with-progn (list ,@body))))))))
 
   (def clause sum
-      (clause-of-kind? sum summing)
+      (clause-of-kind? ((sum summing)))
     (single-variable-clause-expander (variable value-form 0 :sum :result-form-candidate #t)
       `(incf ,variable ,(-recurse- value-form))))
 
   (def clause count
-      (clause-of-kind? count counting)
+      (clause-of-kind? ((count counting)))
     (single-variable-clause-expander (variable value-form 0 :sum :result-form-candidate #t :type 'integer)
       `(when ,(-recurse- value-form)
          (incf ,variable)))))
@@ -70,7 +70,7 @@
 ;; TODO make sure clause keywords can be both cl keywords and simple symbols (needs a smarter destructuring bind)
 
 (define-for/from-clause (for/from :priority -1000)
-    (named-clause-of-kind? for (from upfrom downfrom))
+    (clause-of-kind? (for (from upfrom downfrom)))
   (name from-name from &key
         (by (eswitch (from-name :test 'equal/clause-name)
               ('from
@@ -86,7 +86,7 @@
   by)
 
 (define-for/from-clause for/from/upto
-    (named-clause-of-kind? for from (to upto))
+    (clause-of-kind? (for from (to upto)))
   (name _ from _ to &key (by 1) in)
   from
   to
@@ -94,7 +94,7 @@
   by)
 
 (define-for/from-clause for/from/downto
-    (named-clause-of-kind? for from downto)
+    (clause-of-kind? (for from downto))
   (name _ from _ downto &key (by -1) in)
   from
   downto
@@ -102,7 +102,7 @@
   by)
 
 (define-for/from-clause for/from/below
-    (named-clause-of-kind? for from below)
+    (clause-of-kind? (for from below))
   (name _ from _ below &key (by 1) in)
   from
   below
@@ -110,7 +110,7 @@
   by)
 
 (define-for/from-clause for/from/above
-    (named-clause-of-kind? for from above)
+    (clause-of-kind? (for from above))
   (name _ from _ below &key (by -1) in)
   from
   below

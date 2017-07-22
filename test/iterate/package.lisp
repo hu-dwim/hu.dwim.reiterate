@@ -34,6 +34,8 @@
 
 ;; set up ITERATE as a nickname for HU.DWIM.REITERATE/ITERATE,
 ;; and shadowing-import some stuff that the iterate-test is excercising, but we don't want to implement ourselves, like DSETQ.
+;; TODO decide... looks like this hack will not be needed after all...
+#+nil
 (bind ((iter-package (find-package :iterate))
        (iter-compat-package (find-package :hu.dwim.reiterate/iterate)))
   (when (and iter-package
@@ -49,3 +51,8 @@
   (bind ((symbols (read-from-string "(iterate.original:dsetq)")))
     (shadowing-import symbols iter-compat-package)
     (export symbols iter-compat-package)))
+
+(bind ((iter-compat-package (find-package :hu.dwim.reiterate/iterate))
+       (symbols (read-from-string "(iterate:dsetq)")))
+  (shadowing-import symbols iter-compat-package)
+  (export symbols iter-compat-package))

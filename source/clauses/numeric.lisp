@@ -58,11 +58,11 @@
     (register/next-iteration-form stepper)
     (register/generator name variable/current stepper :stepper/place has-more-condition :type type)))
 
-(defmacro define-for/from-clause (name matcher destructuring-form from to comparator by)
+(defmacro define-for/from-clause (name matcher destructuring-form from to comparator by iter-context)
   `(def clause ,name
      ,matcher
      (bind ((,destructuring-form (rest -clause-)))
-       (with-possibly-different-iteration-context (in :clause -clause-)
+       (with-possibly-different-iteration-context (,iter-context :clause -clause-)
          (expand/generator/has-more-check
           (register-generator/numeric-sequence name ,from ,to ,comparator ,by))))))
 
@@ -83,7 +83,8 @@
   from
   nil
   nil
-  by)
+  by
+  in)
 
 (define-for/from-clause for/from/upto
     (clause-of-kind? (for from (to upto)))
@@ -91,7 +92,8 @@
   from
   to
   '<=
-  by)
+  by
+  in)
 
 (define-for/from-clause for/from/downto
     (clause-of-kind? (for from downto))
@@ -99,7 +101,8 @@
   from
   downto
   '>=
-  by)
+  by
+  in)
 
 (define-for/from-clause for/from/below
     (clause-of-kind? (for from below))
@@ -107,7 +110,8 @@
   from
   below
   '<
-  by)
+  by
+  in)
 
 (define-for/from-clause for/from/above
     (clause-of-kind? (for from above))
@@ -115,4 +119,5 @@
   from
   below
   '>
-  by)
+  by
+  in)

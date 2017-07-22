@@ -20,7 +20,9 @@
         :hu.dwim.util
         :metabang-bind)
   (:shadow #:repeat
-           #:dsetq)
+           #:dsetq
+           #:for
+           #:for/from)
   (:export #:iterate
            #:iter
            #:initially #:after-each #:finally #:finally-protected

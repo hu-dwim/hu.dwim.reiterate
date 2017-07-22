@@ -59,7 +59,8 @@
   :components ((:module "source"
                 :components ((:module "iterate"
                               :components ((:file "package")
-                                           (:file "clauses" :depends-on ("package"))))))))
+                                           (:file "clause-handling" :depends-on ("package"))
+                                           (:file "clauses" :depends-on ("package" "clause-handling"))))))))
 
 (defsystem :hu.dwim.reiterate/iterate/test
   :defsystem-depends-on (:hu.dwim.asdf)

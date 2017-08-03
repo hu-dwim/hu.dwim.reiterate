@@ -4,7 +4,7 @@
 ;;;
 ;;; See LICENCE for details.
 
-(in-package :hu.dwim.reiterate/iterate)
+(in-package :hu.dwim.reiterate/iterate-compat)
 
 ;; these are clauses that should be compatible with their counterparts in iterate
 

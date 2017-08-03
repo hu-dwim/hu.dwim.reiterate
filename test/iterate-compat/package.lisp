@@ -6,7 +6,7 @@
 
 (in-package :hu.dwim.reiterate/test)
 
-(def package :hu.dwim.reiterate/iterate/test
+(def package :hu.dwim.reiterate/iterate-compat/test
   (:use :alexandria
         :anaphora
         :contextl
@@ -14,7 +14,7 @@
         :hu.dwim.debug
         :hu.dwim.def
         :hu.dwim.defclass-star
-        :hu.dwim.reiterate/iterate
+        :hu.dwim.reiterate/iterate-compat
         :hu.dwim.logger
         :hu.dwim.stefil
         :hu.dwim.syntax-sugar
@@ -27,20 +27,20 @@
                           #:macroexpand)
   (:readtable-setup (setup-readtable/same-as-package :hu.dwim.reiterate)))
 
-(hu.dwim.common:import-all-owned-symbols :hu.dwim.reiterate/iterate :hu.dwim.reiterate/iterate/test)
-(hu.dwim.common:import-all-owned-symbols :hu.dwim.reiterate :hu.dwim.reiterate/iterate/test)
+(hu.dwim.common:import-all-owned-symbols :hu.dwim.reiterate/iterate-compat :hu.dwim.reiterate/iterate-compat/test)
+(hu.dwim.common:import-all-owned-symbols :hu.dwim.reiterate :hu.dwim.reiterate/iterate-compat/test)
 
-(use-package :hu.dwim.debug :hu.dwim.reiterate/iterate)
+(use-package :hu.dwim.debug :hu.dwim.reiterate/iterate-compat)
 
-;; set up ITERATE as a nickname for HU.DWIM.REITERATE/ITERATE,
+;; set up ITERATE as a nickname for HU.DWIM.REITERATE/ITERATE-COMPAT,
 ;; and shadowing-import some stuff that the iterate-test is excercising, but we don't want to implement ourselves, like DSETQ.
 ;; TODO decide... looks like this hack will not be needed after all...
 #+nil
 (bind ((iter-package (find-package :iterate))
-       (iter-compat-package (find-package :hu.dwim.reiterate/iterate)))
+       (iter-compat-package (find-package :hu.dwim.reiterate/iterate-compat)))
   (when (and iter-package
              (not (eq iter-package iter-compat-package)))
-    (warn "Renaming the ITERATE package to be able to install a nickname for the HU.DWIM.REITERATE/ITERATE compatibility package, so that we can load and run the original ITERATE tests on it.")
+    (warn "Renaming the ITERATE package to be able to install a nickname for the HU.DWIM.REITERATE/ITERATE-COMPAT compatibility package, so that we can load and run the original ITERATE tests on it.")
     (rename-package iter-package :iterate.original))
   (unless (member (symbol-name :iterate) (package-nicknames iter-compat-package) :test 'equal)
     (rename-package iter-compat-package (package-name iter-compat-package) '(:iterate)))
@@ -52,7 +52,7 @@
     (shadowing-import symbols iter-compat-package)
     (export symbols iter-compat-package)))
 
-(bind ((iter-compat-package (find-package :hu.dwim.reiterate/iterate))
+(bind ((iter-compat-package (find-package :hu.dwim.reiterate/iterate-compat))
        (symbols (read-from-string "(iterate:dsetq)")))
   (shadowing-import symbols iter-compat-package)
   (export symbols iter-compat-package))

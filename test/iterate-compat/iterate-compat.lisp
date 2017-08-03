@@ -4,14 +4,14 @@
 ;;;
 ;;; See LICENCE for details.
 
-(in-package :hu.dwim.reiterate/iterate/test)
+(in-package :hu.dwim.reiterate/iterate-compat/test)
 
 (def suite* (test/iterate-compat :in test))
 
 ;; this is the package into which the interate unit tests will be read
-(def package :hu.dwim.reiterate/iterate/iterate-tests
+(def package :hu.dwim.reiterate/iterate-compat/iterate-tests
   (:use :common-lisp
-        :hu.dwim.reiterate/iterate ; use the reiterate/iterate compatibility layer
+        :hu.dwim.reiterate/iterate-compat ; use the iterate-compat compatibility layer
         #+sbcl #:sb-rt
         #-sbcl #:regression-test))
 
@@ -20,7 +20,7 @@
     (assert (uiop:file-exists-p test-file))
     (with-standard-io-syntax
       (with-input-from-file (input test-file)
-        (bind ((*package* (find-package :hu.dwim.reiterate/iterate/iterate-tests))
+        (bind ((*package* (find-package :hu.dwim.reiterate/iterate-compat/iterate-tests))
                (*print-readably* nil)
                (*print-circle* #t)
                (defpackage-form (read input))

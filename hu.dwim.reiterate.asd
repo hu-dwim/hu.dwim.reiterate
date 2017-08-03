@@ -51,26 +51,26 @@
                              (:file "suite" :depends-on ("package"))
                              (:file "types" :depends-on ("suite"))))))
 
-(defsystem :hu.dwim.reiterate/iterate
+(defsystem :hu.dwim.reiterate/iterate-compat
   :defsystem-depends-on (:hu.dwim.asdf)
   :class "hu.dwim.asdf:hu.dwim.system"
   :description "A drop in compatibility layer of hu.dwim.reiterate to replace Iterate."
   :depends-on (:hu.dwim.reiterate)
   :components ((:module "source"
-                :components ((:module "iterate"
+                :components ((:module "iterate-compat"
                               :components ((:file "package")
                                            (:file "clause-handling" :depends-on ("package"))
                                            (:file "clauses" :depends-on ("package" "clause-handling"))))))))
 
-(defsystem :hu.dwim.reiterate/iterate/test
+(defsystem :hu.dwim.reiterate/iterate-compat/test
   :defsystem-depends-on (:hu.dwim.asdf)
   :class "hu.dwim.asdf:hu.dwim.test-system"
-  :depends-on (:hu.dwim.reiterate/iterate
+  :depends-on (:hu.dwim.reiterate/iterate-compat
                :hu.dwim.reiterate/test
                :iterate
                (:feature :sbcl (:require :sb-rt))
                (:feature (:not :sbcl) :regression-test))
   :components ((:module "test"
-                :components ((:module "iterate"
+                :components ((:module "iterate-compat"
                               :components ((:file "package")
-                                           (:file "iterate-compatibility" :depends-on ("package"))))))))
+                                           (:file "iterate-compat" :depends-on ("package"))))))))

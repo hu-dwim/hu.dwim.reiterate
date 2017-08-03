@@ -6,7 +6,7 @@
 
 (in-package :hu.dwim.def)
 
-(def package :hu.dwim.reiterate/iterate
+(def package :hu.dwim.reiterate/iterate-compat
   (:documantation "Compatibility layer meant to be a drop-in replacement for Iterate.")
   (:use :alexandria
         :anaphora
@@ -46,4 +46,4 @@
                           #:in-package)
   (:readtable-setup (hu.dwim.def:setup-readtable/same-as-package :hu.dwim.reiterate)))
 
-(hu.dwim.common:import-all-owned-symbols :hu.dwim.reiterate :hu.dwim.reiterate/iterate)
+(hu.dwim.common:import-all-owned-symbols :hu.dwim.reiterate :hu.dwim.reiterate/iterate-compat)

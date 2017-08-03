@@ -109,13 +109,14 @@
                               (:body 'variable-bindings/loop-body))))
     (when (stringp name)
       (setf name (generate-unique-name name)))
-    (appendf (slot-value *loop-form* storage-slot-name) `((,name :initial-value ,initial-value :type ,type)))
-    (walk-environment/augment! walk-environment/loop-body :variable name)
-    (walk-environment/augment! walk-environment/current :variable name)
-    (log.debug "Augmented environment with variable ~S in the context of ~A" name *loop-form*)
-    ;; (log.debug "WALK-ENVIRONMENT/LOOP-BODY is ~A" walk-environment/loop-body)
-    ;; (log.debug "WALK-ENVIRONMENT/CURRENT is ~A" walk-environment/current)
-    name))
+    (bind ((var-args (list :initial-value initial-value :type type)))
+      (appendf (slot-value *loop-form* storage-slot-name) (list (list* name var-args)))
+      (walk-environment/augment! walk-environment/loop-body :variable name)
+      (walk-environment/augment! walk-environment/current :variable name)
+      (log.debug "Augmented environment with variable ~S in the context of ~A" name *loop-form*)
+      ;; (log.debug "WALK-ENVIRONMENT/LOOP-BODY is ~A" walk-environment/loop-body)
+      ;; (log.debug "WALK-ENVIRONMENT/CURRENT is ~A" walk-environment/current)
+      (values name var-args))))
 
 (def (function e) register/function (name args body &key inline)
   (when inline
@@ -157,12 +158,25 @@
     (iterate-compile-error "~@<The result form of ~A is already ~S while processing clause ~S~:>" *loop-form* (result-form-of *loop-form*) *clause*))
   (setf (result-form-of *loop-form*) result-form))
 
-(def (function e) register/ensure-result-variable ()
+(def (function e) register/ensure-result-variable (&rest args &key (type +top-type+) (initial-value (initial-value-for-type type)))
   (log.debug "Ensuring result-variable, stack is ~A" *loop-form-stack*)
-  (or (result-variable-of *loop-form*)
-      (aprog1
-          (setf (result-variable-of *loop-form*) (register/variable "RESULT"))
-        (register/result-form it))))
+  (bind (((&optional result-var-name &rest result-var-args) (result-variable-of *loop-form*))
+         (current-initial-value (getf result-var-args :initial-value))
+         (current-type (getf result-var-args :type)))
+    (if result-var-name
+        (progn
+          (unless (equalp current-initial-value initial-value)
+            (iterate-compile-error "~S: there's already a result-variable registered with a conflicting initial-value (current: ~S, requested: ~S)"
+                                   -this-function/name- current-initial-value initial-value))
+          (unless (subtypep type current-type)
+            (iterate-compile-error "~S: there's already a result-variable registered with a conflicting type (current: ~S, requested: ~S)"
+                                   -this-function/name- current-type type)))
+        (progn
+          (setf (values result-var-name result-var-args)
+                (apply 'register/variable "RESULT" args))
+          (setf (result-variable-of *loop-form*) (list* result-var-name result-var-args))
+          (register/result-form result-var-name)))
+    result-var-name))
 
 (def (function e) register/result-form-candidate (name value-form)
   (log.debug "Registering result-form-candidate with key ~S, form ~S, stack is ~A" name value-form *loop-form-stack*)

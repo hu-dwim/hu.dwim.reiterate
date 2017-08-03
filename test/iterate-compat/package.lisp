@@ -20,11 +20,15 @@
         :hu.dwim.syntax-sugar
         :hu.dwim.walker
         :hu.dwim.util
-        :metabang-bind)
+        :metabang-bind
+        #+sbcl #:sb-rt
+        #-sbcl #:regression-test)
   (:shadowing-import-from :hu.dwim.reiterate/test
                           #:test
                           #:eval
                           #:macroexpand)
+  (:shadowing-import-from :hu.dwim.stefil
+                          #:deftest)
   (:readtable-setup (setup-readtable/same-as-package :hu.dwim.reiterate)))
 
 (hu.dwim.common:import-all-owned-symbols :hu.dwim.reiterate/iterate-compat :hu.dwim.reiterate/iterate-compat/test)
@@ -56,3 +60,10 @@
        (symbols (read-from-string "(iterate:dsetq)")))
   (shadowing-import symbols iter-compat-package)
   (export symbols iter-compat-package))
+
+;; this is the package into which the interate unit tests will be read
+(def package :hu.dwim.reiterate/iterate-compat/iterate-tests
+  (:use :common-lisp
+        :hu.dwim.reiterate/iterate-compat ; use the iterate-compat compatibility layer
+        #+sbcl #:sb-rt
+        #-sbcl #:regression-test))

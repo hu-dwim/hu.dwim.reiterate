@@ -8,13 +8,6 @@
 
 (def suite* (test/iterate-compat :in test))
 
-;; this is the package into which the interate unit tests will be read
-(def package :hu.dwim.reiterate/iterate-compat/iterate-tests
-  (:use :common-lisp
-        :hu.dwim.reiterate/iterate-compat ; use the iterate-compat compatibility layer
-        #+sbcl #:sb-rt
-        #-sbcl #:regression-test))
-
 (def function read-iterate-tests-with-reitarate ()
   (bind ((test-file (asdf:system-relative-pathname :iterate "iterate-test.lisp")))
     (assert (uiop:file-exists-p test-file))
@@ -35,7 +28,23 @@
             :do (print form)
             :do (eval form)))))))
 
+(def fixture read-itearate-tests ()
+  (rem-all-tests)
+  (read-iterate-tests-with-reitarate)
+  (-body-))
+
 (def test test/iterate-compat/iterate-self-tests ()
-  (bind ((rt-package (find-package #+sbcl :sb-rt
-                                   #-sbcl :regression-test)))
-    (funcall (find-symbol (symbol-name '#:do-tests) rt-package))))
+  (with-fixture read-itearate-tests
+    (bind ((all-tests (pending-tests))
+           (expected-to-fail (symbol-value 'hu.dwim.reiterate/iterate-compat/iterate-tests::*tests-expected-to-fail*))
+           ((:values _ _ failed-tests)
+            (funcall (find-symbol (symbol-name '#:do-tests) :hu.dwim.reiterate/iterate-compat/test)))
+           (unexpected-failures (set-difference failed-tests expected-to-fail)))
+      (format *debug-io* "~&~%~%Unexpectedly failed tests:~%~A~%Test count: ~A, failed: ~A, expected failures: ~A, unexpected failures: ~A~%~%"
+              (format nil "~{~A~^~%~}" (sort (mapcar 'string-downcase unexpected-failures)
+                                             'string<))
+              (length all-tests)
+              (length failed-tests)
+              (length expected-to-fail)
+              (length unexpected-failures))
+      (values))))

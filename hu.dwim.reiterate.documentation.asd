@@ -7,7 +7,7 @@
 (defsystem :hu.dwim.reiterate.documentation
   :defsystem-depends-on (:hu.dwim.asdf)
   :class "hu.dwim.asdf:hu.dwim.documentation-system"
-  :depends-on (:hu.dwim.reiterate.test
+  :depends-on (:hu.dwim.reiterate/test
                :hu.dwim.presentation)
   :components ((:module "documentation"
                 :components ((:file "main" :depends-on ("package"))

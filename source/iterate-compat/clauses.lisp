@@ -32,10 +32,12 @@
   (clause-of-kind? always)
   (progn
     (assert-clause-length 2)
-    (bind ((result-variable (register/ensure-result-variable))
+    (bind ((result-variable (register/ensure-result-variable :initial-value #t))
            (expr (-recurse- (second -clause-))))
-      `(or (setq ,result-variable ,expr)
-           (return-from ,(block-name-of *loop-form*) nil)))))
+      `(unless (setq ,result-variable ,expr)
+         ;; this way FINALLY would be executed, but iterate doesn't do that. see also NEVER and THEREIS below.
+         ;; (go ,(label/end-of *loop-form*))
+         (return-from ,(block-name-of *loop-form*) nil)))))
 
 (def clause never
   (clause-of-kind? never)

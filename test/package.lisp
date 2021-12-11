@@ -19,6 +19,7 @@
         :hu.dwim.stefil
         :hu.dwim.syntax-sugar
         :hu.dwim.walker
+        :hu.dwim.walker/test ; for RUN-IN-LEXICAL-ENVIRONMENT
         :hu.dwim.util
         :metabang-bind)
   (:shadow #:test

@@ -167,10 +167,10 @@
         (progn
           (unless (equalp current-initial-value initial-value)
             (iterate-compile-error "~S: there's already a result-variable registered with a conflicting initial-value (current: ~S, requested: ~S)"
-                                   -this-function/name- current-initial-value initial-value))
+                                   -this-definition/name- current-initial-value initial-value))
           (unless (subtypep type current-type)
             (iterate-compile-error "~S: there's already a result-variable registered with a conflicting type (current: ~S, requested: ~S)"
-                                   -this-function/name- current-type type)))
+                                   -this-definition/name- current-type type)))
         (progn
           (setf (values result-var-name result-var-args)
                 (apply 'register/variable "RESULT" args))

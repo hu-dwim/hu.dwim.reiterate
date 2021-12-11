@@ -11,7 +11,7 @@
 (def special-variable *dummy-special*)
 
 (def test test/lexenv/iteration-variables-show-up-in-lexenv ()
-  (hu.dwim.walker::with-captured-lexical-environment
+  (run-in-lexical-environment
       (env (iter (for x :in-list '(1))
                  (for y :in-vector #(1))
                  -here-))
@@ -19,7 +19,7 @@
     (is (find-variable-in-lexenv 'y env))))
 
 (def test test/lexenv/enclosing-environment-works-fine ()
-  (hu.dwim.walker::with-captured-lexical-environment
+  (run-in-lexical-environment
       (env (let ((x 42))
              (declare (special x))
              (symbol-macrolet ((dummy-symbol-macro 42))

@@ -17,6 +17,7 @@
                :hu.dwim.syntax-sugar/lambda-with-bang-args
                ;; TODO :hu.dwim.util brings in many dependencies through :hu.dwim.common (including nothing less than iterate itself! :)
                :hu.dwim.util
+               :hu.dwim.walker
                :metabang-bind)
   :components ((:module "source"
                 :components ((:module "clauses"
@@ -40,7 +41,8 @@
   :class "hu.dwim.asdf:hu.dwim.test-system"
   :depends-on (:hu.dwim.debug
                :hu.dwim.reiterate+hu.dwim.logger
-               :hu.dwim.stefil+hu.dwim.def+swank)
+               :hu.dwim.stefil+hu.dwim.def+swank
+               :hu.dwim.walker/test)
   :components ((:module "test"
                 :components ((:file "package")
                              (:file "basic" :depends-on ("suite"))

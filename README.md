@@ -9,12 +9,13 @@ It is inspired by [iterate](https://iterate.common-lisp.dev/), and is in fact
 mostly a rewrite of it using a [proper code
 walker](https://github.com/hu-dwim/hu.dwim.walker).
 
+
 ## Why
 
 Iterate has all kinds of issues, mostly around code walking. It was causing us
 trouble when we used it inside [delimited
 continuations](https://github.com/hu-dwim/hu.dwim.delico), or inside the query
-compiler in hu.dwim.perec (e.g. it is not updating the lexical environment with
+compiler in hu.dwim.perec (e.g. it is not extending the lexical environment with
 the variables it is introducing).
 
 Iterate also loses [SEXP](https://en.wikipedia.org/wiki/S-expression) identity,
@@ -29,21 +30,20 @@ compatibility layer so that it can be used as a drop-in replacement for Iterate.
 
 Written by [attila@lendvai.name](mailto:attila@lendvai.name).
 
+
 ## Where
 
 The primary communication channel is the facilities on [the project's GitHub
 page](https://github.com/hu-dwim/hu.dwim.reiterate).
 
-It also has a half-baked page in our [metadata driven
-GUI](http://dwim.hu/project/hu.dwim.reiterate), but don't expect much from it.
 
 ## Status
 
-Unfortunately, I ran out of steam around 80% completion, and the project has
+Unfortunately, I ran out of steam at around 80% completion, and the project has
 been abandoned for years.
 
 You're welcome to take over development if you feel inspired!
 
 What works is of good quality, and the infrastructure is also solid. It has a
-good test system, too. IOW, the depth-work is mostly done, but the breadth-work
-is not finished.
+good test system, too. IOW, the depth-work is mostly done, but there's more
+breadth-work to be done.

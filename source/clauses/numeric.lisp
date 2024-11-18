@@ -66,8 +66,8 @@
          (expand/generator/has-more-check
           (register-generator/numeric-sequence name ,from ,to ,comparator ,by))))))
 
-;; TODO use STEP instead of BY?
-;; TODO make sure clause keywords can be both cl keywords and simple symbols (needs a smarter destructuring bind)
+;; TODO use STEP instead of BY? maybe support both and other variants?
+;; TODO make sure clause keywords can be both cl keywords and simple symbols (needs a smarter destructuring bind implementation)
 
 (define-for/from-clause (for/from :priority -1000)
     (clause-of-kind? (for (from upfrom downfrom)))

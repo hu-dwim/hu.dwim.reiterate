@@ -13,7 +13,7 @@
              (eval '(iter (for foo from 5 to 10 :by 2)
                           (collecting foo)))))
   (with-expected-failures
-    ;; TODO fix the clause destructuring-bind (and create variations)
+    ;; TODO make sure clause keywords can be both cl keywords and simple symbols (needs a smarter destructuring bind implementation)
     (is (equal '(5 7 9)
                (eval '(iter (for foo from 5 to 10 by 2)
                             (collecting foo))))))

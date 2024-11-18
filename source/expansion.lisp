@@ -26,7 +26,7 @@
         (labels ((recurse (object)
                    (when (consp object)
                      (when (gethash object seen)
-                       (iterate-compile-error "~@<hu.dwim.reiterate relies on the cons cell identities of the source form, and the form you provided repeatedly contains the same identity. You may disable this error by setting the variable ~S to T, but by that you'll also hinder the debugger's ability from properly locating source code from stack frames. The repeated form is ~S.~:>" '*preserve-source-form-identities* object))
+                       (iterate-compile-error "~@<hu.dwim.reiterate relies on the cons cell identities of the source form, and the form you provided repeatedly contains the same identity. You may disable this error by setting the variable ~S to T, but by that you'll also hinder the debugger's ability to properly locate source code from stack frames. The repeated form is ~S.~:>" '*preserve-source-form-identities* object))
                      (setf (gethash object seen) #t)
                      (progn
                        (recurse (car object))

@@ -9,7 +9,7 @@
 (def suite* (test/source-code-identity :in test))
 
 (def test test/source-code-identity/forms-without-clauses ()
-  (bind ((body-forms `((+ 2 3)
+  (bind ((body-forms '((+ 4 5)
                        (progn
                          42)
                        (list 1 2 3)))

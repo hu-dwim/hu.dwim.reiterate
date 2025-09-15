@@ -49,3 +49,11 @@ You're welcome to take over development if you feel inspired!
 Whatever is finished is of good quality, and the infrastructure is
 also solid. It has good unit tests, too. In short, all the depth-work
 is probably done, but there's more breadth-work to be done.
+
+## Related libs
+
+- [Khazern](https://github.com/s-expressionists/Khazern) is a portable
+  and extensible Common Lisp LOOP implementation.
+
+- There is of course [Iterate](https://iterate.common-lisp.dev/)
+  itself that inspired this rewrite.
